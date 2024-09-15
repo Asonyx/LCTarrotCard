@@ -117,32 +117,7 @@ Here are the different effects you can get from each card :<br/>
 </details>
 
 ## For modders :
-If you want to add your own custom card, you can do so by following these steps :<br/>
-(Just note that I am going to skip some steps about the base of modding, so if you are new to modding, I recommend you to check the [Lethal wiki's developer's guide](https://lethal.wiki/dev/overview/))
-1. Create a material for the front of the card
-2. (Optional) Create a material for the card's burn effect, if you are not satisfied with the default one which are :<br/>
-   <details>
-    <summary>Default burn colors</summary>
-    - Aqua : `Assets.Materials.BurnAqua` <br/>
-    - Blue : `Assets.Materials.BurnBlue` <br/>
-    - Green : `Assets.Materials.BurnGreen` <br/>
-    - Purple : `Assets.Materials.BurnPurple` <br/>
-    - Red : `Assets.Materials.BurnRed` <br/>
-    - White : `Assets.Materials.BurnWhite` <br/>
-    - Yellow : `Assets.Materials.BurnWhite` <br/>
-   </details>
-3. In your mod's code, create a class that inherite of class `LCTarrotCard.Cards.Card`
-4. Implement the methods ``GetCardMaterial`` and ``GetCardBurn`` that return your card front material and burn material
-5. Implement the method ``ExecuteEffect(PlayerControllerB playerWhoDrew)`` that will execute when the card is drawn
-6. Create a static method somewhere and subscribe it to `LCTarrotCard.Cards.AllCards.OnLoadCard`<br/>
-    - In this method (which will be called when every tarot card will be loaded) you will register your card.s by addind them to the dictionnary<br/>
-    - To do so, in the method add the following for each card :<br/>
-    ``LCTarrotCard.Cards.AllCards.AllCardsWeighted.Add(typeof( YOUR_CARD_CLASS ), YOUR_CARD_PROBABILITY );``
-
-</br>
-
-If you follow these steps you should be able to add your very own card to the game</br>
-I would also recommend you to take a look at the mod's code by checking the [GitHub repo](https://github.com/Asonyx/LCTarrotCard/tree/master/) if you want to known more about how that works
+### I will (re)make a good tutorial in a future update because I messed things up in the previous one
 
 # To contact me :
 - asonyx (On discord)
