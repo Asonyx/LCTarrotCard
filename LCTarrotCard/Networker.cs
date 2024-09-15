@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Configuration;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LCTarrotCard.Ressource;
@@ -413,7 +412,7 @@ namespace LCTarrotCard {
         }
 
 
-        public static bool AllowExtraLife = false;
+        public static bool AllowExtraLife;
 
         [ServerRpc(RequireOwnership = false)]
         public void AllowExtraLifeServerRpc() {
@@ -481,7 +480,8 @@ namespace LCTarrotCard {
 
         public override void OnNetworkSpawn() {
             
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            
+            if (NetworkManager.Singleton != null && (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
                 Instance?.gameObject.GetComponent<NetworkObject>().Despawn();
             Instance = this;
             
@@ -507,7 +507,7 @@ namespace LCTarrotCard {
         private static void Init() {
             if (_networkPrefab != null) return;
             
-            _networkPrefab = Assets.bundle.LoadAsset<GameObject>("Assets/Tarrot/Networker.prefab");
+            _networkPrefab = Assets.Bundle.LoadAsset<GameObject>("Assets/Tarrot/Networker.prefab");
             _networkPrefab.AddComponent<Networker>();
             NetworkManager.Singleton.AddNetworkPrefab(_networkPrefab);
         }

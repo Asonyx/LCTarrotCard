@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using GameNetcodeStuff;
 using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
@@ -36,10 +35,9 @@ namespace LCTarrotCard.Cards {
             
             if (randomPlayer.isPlayerDead || !randomPlayer.isPlayerControlled) return;
             
-            Debug.Log("Chose player : " + randomPlayer.playerUsername);
             
             if (rng <= 2) {
-                Debug.Log("Will tp mob");
+                
                 Vector3 tpPos = randomPlayer.transform.position + randomPlayer.gameplayCamera.transform.forward * 5;
                 Networker.Instance.TeleportRandomEntityServerRpc(tpPos, randomPlayer.isInsideFactory);
             }

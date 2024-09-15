@@ -9,9 +9,9 @@ using UnityEngine;
 
 namespace LCTarrotCard.Ressource {
     
-    internal static class Assets {
+    public static class Assets {
         
-        internal static AssetBundle bundle;
+        internal static AssetBundle Bundle;
 
         public static Item TarotItem;
         public static GameObject SingleTarotCard;
@@ -57,8 +57,8 @@ namespace LCTarrotCard.Ressource {
                 PluginLogger.Error("Cannot load the asset bundle");
                 return false;
             }
-            bundle = AssetBundle.LoadFromStream(bundleStream);
-            if (bundle != null) return true;
+            Bundle = AssetBundle.LoadFromStream(bundleStream);
+            if (Bundle != null) return true;
             
             PluginLogger.Error("Cannot load the asset bundle");
             return false;
@@ -110,7 +110,7 @@ namespace LCTarrotCard.Ressource {
         }
 
         private static T LoadAsset<T>(string assetPath) where T : Object {
-            return bundle.LoadAsset<T>("Assets/Tarrot/" + assetPath);
+            return Bundle.LoadAsset<T>("Assets/Tarrot/" + assetPath);
         }
         
         

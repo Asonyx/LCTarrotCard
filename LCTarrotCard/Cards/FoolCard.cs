@@ -18,15 +18,15 @@ namespace LCTarrotCard.Cards {
             Assets.Materials.CardHangedMat
         };
 
-        private Material _cardToMimic;
+        private Material cardToMimic;
         
         public override void InitCard() {
-            _cardToMimic = allCardMat[Random.Range(0, allCardMat.Length)];
+            cardToMimic = allCardMat[Random.Range(0, allCardMat.Length)];
             base.InitCard();
         }
 
         public override Material GetCardMaterial() {
-            return _cardToMimic;
+            return cardToMimic;
         }
 
         public override Material GetCardBurn() {

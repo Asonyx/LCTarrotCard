@@ -21,10 +21,8 @@ namespace LCTarrotCard.Cards {
 
         public static readonly Dictionary<Type, int> AllCardsWeighted = new Dictionary<Type, int>();
         private static int _totalWeight;
-
-        public static event Action OnLoadCard;
         
-        public static void Init() {
+        internal static void Init() {
             AllCardsWeighted.Add(typeof(TowerCard), ProbabilityTable.TowerCard);
             AllCardsWeighted.Add(typeof(WheelCard), ProbabilityTable.WheelCard);
             AllCardsWeighted.Add(typeof(SunCard), ProbabilityTable.SunCard);
@@ -35,7 +33,25 @@ namespace LCTarrotCard.Cards {
             AllCardsWeighted.Add(typeof(DeathCard), ProbabilityTable.DeathCard);
             AllCardsWeighted.Add(typeof(HangedManCard), ProbabilityTable.HangedManCard);
             AllCardsWeighted.Add(typeof(FoolCard), ProbabilityTable.FoolCard);
-            OnLoadCard?.Invoke();
+            RecalculateTotalWeight();
+        }
+        
+        public static void RegisterCard(Type cardType, int weight) {
+            if (!typeof(Card).IsAssignableFrom(cardType)) {
+                PluginLogger.Warning("Trying to register a non-card type (type : " + cardType.Name + ")");
+                return;
+            }
+            
+            if (AllCardsWeighted.ContainsKey(cardType)) {
+                PluginLogger.Warning("Trying to register a card that is already registered (type : " + cardType.Name + ")");
+                return;
+            }
+            AllCardsWeighted.Add(cardType, weight);
+            RecalculateTotalWeight();
+        }
+        
+        private static void RecalculateTotalWeight() {
+            _totalWeight = 0;
             foreach (int weight in AllCardsWeighted.Values) {
                 _totalWeight += weight;
             }
@@ -53,6 +69,8 @@ namespace LCTarrotCard.Cards {
                 }
                 currentWeight += entry.Value;
             }
+            
+            PluginLogger.Debug(cardChoose.Name);
 
             if (typeof(Card).IsAssignableFrom(cardChoose)) return cardChoose;
             

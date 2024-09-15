@@ -19,7 +19,7 @@ namespace LCTarrotCard {
 
         public static Plugin Instance;
 
-        internal Harmony harmony;
+        private Harmony harmony;
 
         public ManualLogSource logger;
         private void Awake() {
@@ -29,16 +29,15 @@ namespace LCTarrotCard {
             harmony = new Harmony(PluginConstants.PLUGIN_GUID);
             
             Assets.Load();
-            
-            AllCards.Init();
 
+            AllCards.Init();
             
             harmony.PatchAll();
             NetcodePatcher();
             
         }
-        
-        public static KeyboardShortcut debugBtn = new KeyboardShortcut(KeyCode.BackQuote);
+
+        internal static KeyboardShortcut DebugBtn = new KeyboardShortcut(KeyCode.BackQuote);
         
         
         private static void NetcodePatcher()
@@ -65,7 +64,7 @@ namespace LCTarrotCard {
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
         private static void TestPatch(PlayerControllerB __instance) {
-            if (PluginConstants.DEBUG_MODE && __instance.IsOwner && Plugin.debugBtn.IsDown()) {
+            if (PluginConstants.DEBUG_MODE && __instance.IsOwner && Plugin.DebugBtn.IsDown()) {
                 PluginLogger.Debug("Spawning item");
                 GameObject obj = UnityEngine.Object.Instantiate(Assets.TarotItem.spawnPrefab, __instance.transform.position, __instance.transform.rotation);
                 
@@ -106,7 +105,7 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.0.0";
+        public const string PLUGIN_VERSION = "1.0.2";
         internal const bool DEBUG_MODE = false;
     }
 }

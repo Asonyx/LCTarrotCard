@@ -149,14 +149,14 @@ namespace LCTarrotCard.Util {
             }
         }
         
-        private static readonly System.Random _rng = new System.Random();  
+        private static readonly System.Random Rng = new System.Random();  
 
         public static void Shuffle<T>(IList<T> list)  
         {  
             int n = list.Count;  
             while (n > 1) {  
                 n--;  
-                int k = _rng.Next(n + 1);  
+                int k = Rng.Next(n + 1);  
                 (list[k], list[n]) = (list[n], list[k]);
             }  
         }
