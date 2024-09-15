@@ -118,7 +118,7 @@ Here are the different effects you can get from each card :<br/>
 
 ## For modders :
 If you want to add your own custom card, you can do so by following these steps :<br/>
-(Just note that I am going to skip some steps about the base of modding, so if you are new to modding, I recommend you to check the [Lehtal wiki's developer's guide](https://lethal.wiki/dev/overview/))
+(Just note that I am going to skip some steps about the base of modding, so if you are new to modding, I recommend you to check the [Lethal wiki's developer's guide](https://lethal.wiki/dev/overview/))
 1. Create a material for the front of the card
 2. (Optional) Create a material for the card's burn effect, if you are not satisfied with the default one which are :<br/>
    <details>
@@ -140,6 +140,7 @@ If you want to add your own custom card, you can do so by following these steps 
     ``LCTarrotCard.Cards.AllCards.AllCardsWeighted.Add(typeof( YOUR_CARD_CLASS ), YOUR_CARD_PROBABILITY );``
 
 </br>
+
 If you follow these steps you should be able to add your very own card to the game</br>
 I would also recommend you to take a look at the mod's code by checking the [GitHub repo](https://github.com/Asonyx/LCTarrotCard/tree/master/) if you want to known more about how that works
 
