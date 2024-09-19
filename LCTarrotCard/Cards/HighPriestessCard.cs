@@ -17,7 +17,8 @@ namespace LCTarrotCard.Cards {
             int foundDeadPlayer = -1;
             for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++) {
                 PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[i];
-                if (!player.isPlayerControlled || !player.isPlayerDead) continue;
+                PluginLogger.Debug("Checking player " + player.playerUsername + " isPlayerControlled: " + player.isPlayerControlled + " isPlayerDead: " + player.isPlayerDead);
+                if (!player.isPlayerDead) continue;
                 foundDeadPlayer = i;
                 break;
             }

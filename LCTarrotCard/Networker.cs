@@ -31,7 +31,7 @@ namespace LCTarrotCard {
         
         [ClientRpc]
         public void SetShipDoorStateClientRpc(bool opened) {
-            foreach (HangarShipDoor shipDoor in Object.FindObjectsOfType<HangarShipDoor>()) {
+            foreach (HangarShipDoor shipDoor in FindObjectsOfType<HangarShipDoor>()) {
                 if (opened) {
                     shipDoor.SetDoorOpen();
                     shipDoor.doorPower = 0f;
@@ -154,6 +154,7 @@ namespace LCTarrotCard {
             List<EnemyAI> allEnemies = RoundManager.Instance.SpawnedEnemies;
             Helper.Shuffle(allEnemies);
             foreach (EnemyAI enemy in allEnemies.Where(enemy => !enemy.isEnemyDead && enemy.isOutside == !inside && enemy.IsSpawned)) {
+                PluginLogger.Debug("Enemy is outside ? " + enemy.isOutside + " player inside ? " + inside);
                 PluginLogger.Debug("Tp " + enemy.enemyType.enemyName + " to " + position);
                 TeleportEnemy(enemy, position);
                 return;
@@ -188,12 +189,12 @@ namespace LCTarrotCard {
         public void TeleportPlayerClientRpc(int playerId, Vector3 position, bool inside = true, bool insideShip = false) {
             PlayerControllerB playerControllerB = StartOfRound.Instance.allPlayerScripts[playerId];
 
-            if (FindObjectOfType<AudioReverbPresets>()) {
-                FindObjectOfType<AudioReverbPresets>().audioPresets[2].ChangeAudioReverbForPlayer(playerControllerB);
-            }
+            
             
             playerControllerB.StopSinkingServerRpc();
-            playerControllerB.CancelSpecialTriggerAnimations();
+            if (playerControllerB.currentTriggerInAnimationWith) {
+                playerControllerB.currentTriggerInAnimationWith.CancelAnimationExternally();
+            }
             playerControllerB.inSpecialInteractAnimation = false;
             playerControllerB.isClimbingLadder = false;
             
@@ -206,6 +207,13 @@ namespace LCTarrotCard {
             playerControllerB.beamOutParticle.Play();
             if (playerId == (int) GameNetworkManager.Instance.localPlayerController.playerClientId) {
                 HUDManager.Instance.ShakeCamera(ScreenShakeType.Big);
+                
+            }
+            if (FindObjectOfType<AudioReverbPresets>()) {
+                if (playerControllerB.isInsideFactory) {
+                    FindObjectOfType<AudioReverbPresets>().audioPresets[2].ChangeAudioReverbForPlayer(playerControllerB);
+                }
+                else FindObjectOfType<AudioReverbPresets>().audioPresets[3].ChangeAudioReverbForPlayer(playerControllerB);
             }
         }
         
@@ -218,17 +226,18 @@ namespace LCTarrotCard {
         
         [ClientRpc]
         public void SetPlayerHealthClientRpc(int playerId, int health) {
+            if (health <= 0) health = 1;
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerId];
             int previousHealth = player.health;
             player.health = health;
 
             if (player.IsOwner) {
                 HUDManager.Instance.UpdateHealthUI(health, previousHealth > health);
-                if (health < 10 && !player.criticallyInjured) {
+                if (health <= 20 && !player.criticallyInjured) {
                     HUDManager.Instance.ShakeCamera(ScreenShakeType.Big);
                     player.MakeCriticallyInjured(true);
                 }
-                else if (player.criticallyInjured && health > 10) {
+                else if (player.criticallyInjured && health > 20) {
                     player.MakeCriticallyInjured(false);
                 }
                 
@@ -237,7 +246,7 @@ namespace LCTarrotCard {
             if (previousHealth > health) return;
             
             if (player.IsOwner) {
-                
+                StartCoroutine(SetPlayerUI(player, health <= 20));
                 StartOfRound.Instance.LocalPlayerDamagedEvent.Invoke();
                 player.takingFallDamage = false;
                 if (player.inSpecialInteractAnimation && !player.twoHandedAnimation) {
@@ -368,6 +377,7 @@ namespace LCTarrotCard {
                 player.spectatedPlayerScript = null;
                 HUDManager.Instance.audioListenerLowPass.enabled = false;
                 StartOfRound.Instance.SetSpectateCameraToGameOverMode(false, player);
+                StartCoroutine(SetPlayerUI(player));
             }
             player.voiceMuffledByEnemy = false;
             SoundManager.Instance.playerVoicePitchTargets[playerId] = 1f;
@@ -427,6 +437,7 @@ namespace LCTarrotCard {
         [ServerRpc(RequireOwnership = false)]
         public void ExtraLifeServerRpc(int playerId) {
             if (!AllowExtraLife) return;
+            PluginLogger.Debug("extra life " + StartOfRound.Instance.allPlayerScripts[playerId].playerUsername);
             AllowExtraLifeClientRpc(false);
             TeleportPlayerServerRpc(playerId, StartOfRound.Instance.playerSpawnPositions[0].position, false, true);
             ExtraLifeClientRpc(playerId);
@@ -439,11 +450,18 @@ namespace LCTarrotCard {
             player.isPlayerDead = false;
             player.MakeCriticallyInjured(false);
             if (player.IsOwner) {
+                StartCoroutine(SetPlayerUI(player));
                 HUDManager.Instance.UpdateHealthUI(100, false);
             }
             if (StartOfRound.Instance.allPlayerScripts[playerId].IsOwner) {
                 HUDManager.Instance.DisplayTip("Extra life", "Thanks to the high priestess card, you are given an extra chance to live");
             }
+        }
+
+        private static IEnumerator SetPlayerUI(PlayerControllerB player, bool critical = false) {
+            yield return new WaitForFixedUpdate();
+            HUDManager.Instance.UpdateHealthUI(player.health, false);
+            player.MakeCriticallyInjured(critical);
         }
         
 

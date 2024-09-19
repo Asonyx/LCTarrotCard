@@ -17,9 +17,9 @@ namespace LCTarrotCard.Cards {
             
             int rng = Random.Range(0, 60);
             
-            if (rng <= 1) {
+            if (rng == 0) {
                 PluginLogger.Debug("Ship is leaving");
-                StartOfRound.Instance.ShipLeaveAutomatically();
+                StartOfRound.Instance.ShipLeaveAutomatically(true);
             }
             else if (rng <= 22) {
                 PluginLogger.Debug("Opening or closing random security doors");

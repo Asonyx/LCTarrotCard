@@ -50,6 +50,10 @@ namespace LCTarrotCard.Cards {
             RecalculateTotalWeight();
         }
         
+        public static List<Type> GetAllCardsAsList() {
+            return new List<Type>(AllCardsWeighted.Keys);
+        }
+        
         private static void RecalculateTotalWeight() {
             _totalWeight = 0;
             foreach (int weight in AllCardsWeighted.Values) {
