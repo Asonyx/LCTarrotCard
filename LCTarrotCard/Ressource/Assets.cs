@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using HarmonyLib;
+using LCTarrotCard.Config;
 using LCTarrotCard.Items;
 using LCTarrotCard.Util;
 using Unity.Netcode;
@@ -45,10 +46,10 @@ namespace LCTarrotCard.Ressource {
         }
 
         public static void Load() {
-            if (LoadBundle()) {
-                LoadAssets();
-                InitSpawns();
-            }
+            if (!LoadBundle()) return;
+            
+            LoadAssets();
+            InitSpawns();
         }
 
         private static bool LoadBundle() {
@@ -107,6 +108,7 @@ namespace LCTarrotCard.Ressource {
         private static void InitSpawns() {
             TarotRarity = new SpawnRarity(17, TarotItem);
             TarotRarity.SetValues(vow: 19, experimentation: 12, march: 21, adamance: 22, rend: 22, dine: 23, titan: 30, artifice: 25, embrion: 20);
+            TarotRarity.MultiplyAllRarities(ConfigManager.DeckMultiplySpawnChance.Value);
         }
 
         private static T LoadAsset<T>(string assetPath) where T : Object {

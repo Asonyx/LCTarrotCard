@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using GameNetcodeStuff;
 using HarmonyLib;
+using LCTarrotCard.Patches;
 using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace LCTarrotCard {
     [HarmonyPatch]
@@ -89,9 +91,13 @@ namespace LCTarrotCard {
         
         [ServerRpc(RequireOwnership = false)]
         public void SpawnCoilheadServerRpc() {
-
-            EnemyVent[] vents = FindObjectsOfType<EnemyVent>();
-            Vector3 spawnPos = vents[Random.Range(0, vents.Length)].floorNode.position;
+            Transform spawnTransform = Helper.GetRandomSpawnLocation();
+            if (spawnTransform == null) {
+                PluginLogger.Error("No spawn location found");
+                return;
+            }
+            Vector3 spawnPos = spawnTransform.position;
+            
             GameObject coilhead = Instantiate(Helper.Enemies.SpringMan.enemyPrefab, spawnPos, Quaternion.identity);
             coilhead.GetComponentInChildren<NetworkObject>().Spawn(true);
             RoundManager.Instance.SpawnedEnemies.Add(coilhead.GetComponent<SpringManAI>());
@@ -105,33 +111,48 @@ namespace LCTarrotCard {
             bool foundJester = false;
             foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
                 if (enemy is JesterAI jester && !jester.isEnemyDead) {
+                    if (jester.currentBehaviourStateIndex == 2) return;
                     foundJester = true;
                 }
             }
 
             if (!foundJester) {
-                
-                EnemyVent[] vents = FindObjectsOfType<EnemyVent>();
-                Vector3 spawnPos = vents[Random.Range(0, vents.Length)].floorNode.position;
+                Transform spawnTransform = Helper.GetRandomSpawnLocation();
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
             
                 GameObject jester = Instantiate(Helper.Enemies.Jester.enemyPrefab, spawnPos, Quaternion.identity);
                 jester.GetComponentInChildren<NetworkObject>().Spawn(true);
                 RoundManager.Instance.SpawnedEnemies.Add(jester.GetComponent<JesterAI>());
                 jester.GetComponent<JesterAI>().SetEnemyOutside();
-            
                 jester.GetComponent<JesterAI>().SwitchToBehaviourState(1);
-                
             }
 
             StartCoroutine(PopDelay(popDelay));
 
         }
+        
+        private static IEnumerator PopDelay(float delay) {
+            yield return new WaitForSeconds(delay);
+            PluginLogger.Debug("Popping jesters");
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (enemy is JesterAI jester && !jester.isEnemyDead) {
+                    jester.SwitchToBehaviourState(2);
+                }
+            }
+        }
 
         [ServerRpc(RequireOwnership = false)]
         public void SpawnGiantOrDogServerRpc(int amount) {
-            GameObject[] outsideNodes = GameObject.FindGameObjectsWithTag("OutsideAINode");
             for (int i = 0; i < amount; i++) {
-                Vector3 spawnPos = outsideNodes[Random.Range(0, outsideNodes.Length)].transform.position;
+                Transform spawnTransform = Helper.GetRandomSpawnLocation(false);
+                if (spawnTransform == null) continue;
+                
+                Vector3 spawnPos = spawnTransform.position;
+                
                 if (Random.Range(0, 2) == 0) {
                     PluginLogger.Debug("Spawn giant");
                     GameObject giant = Instantiate(Helper.Enemies.ForestGiant.enemyPrefab, spawnPos, Quaternion.identity);
@@ -168,7 +189,7 @@ namespace LCTarrotCard {
         
         [ClientRpc]
         public void GhostBreatheClientRpc(Vector3 position) {
-            AudioSource.PlayClipAtPoint(Assets.GhostBreathe, position, 3);
+            AudioSource.PlayClipAtPoint(Assets.GhostBreathe, position, 4);
         }
         
         [ServerRpc(RequireOwnership = false)]
@@ -457,13 +478,301 @@ namespace LCTarrotCard {
                 HUDManager.Instance.DisplayTip("Extra life", "Thanks to the high priestess card, you are given an extra chance to live");
             }
         }
+        
+        [ServerRpc(RequireOwnership = false)]
+        public void LittleGirlChaseServerRpc(int playerId) {
+            DressGirlAI dressGirl = null;
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (!(enemy is DressGirlAI littleGirl) || littleGirl.isEnemyDead || !littleGirl.IsSpawned) continue;
+                dressGirl = littleGirl;
+                break;
+            }
+
+            if (dressGirl == null) {
+                Transform spawnTransform = Helper.GetRandomSpawnLocation();
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
+            
+                GameObject girl = Instantiate(Helper.Enemies.DressGirl.enemyPrefab, spawnPos, Quaternion.identity);
+                girl.GetComponentInChildren<NetworkObject>().Spawn(true);
+                RoundManager.Instance.SpawnedEnemies.Add(girl.GetComponent<DressGirlAI>());
+                girl.GetComponent<DressGirlAI>().SetEnemyOutside();
+                dressGirl = girl.GetComponent<DressGirlAI>();
+            }
+            dressGirl.hauntingPlayer = StartOfRound.Instance.allPlayerScripts[playerId];
+            
+            StartCoroutine(DelaySetGirlProperties(playerId, dressGirl));
+        }
+        
+        private IEnumerator DelaySetGirlProperties(int playerId, DressGirlAI dressGirl) {
+            yield return new WaitUntil(() => dressGirl.agent != null);
+            LittleGirlChaseClientRpc(playerId, dressGirl.NetworkObjectId);
+        }
+
+        [ClientRpc]
+        public void LittleGirlChaseClientRpc(int playerId, ulong networkId) {
+            DressGirlAI dressGirl = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == networkId) as DressGirlAI;
+            if (dressGirl == null) return;
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerId];
+
+            if ((int)GameNetworkManager.Instance.localPlayerController.playerClientId == playerId) {
+                Vector3 hauntPos = player.transform.position + player.transform.forward * 5;
+                TeleportEnemy(dressGirl, hauntPos);
+                
+                dressGirl.EnableEnemyMesh(true, true);
+                
+                dressGirl.SwitchToBehaviourStateOnLocalClient(1);
+                dressGirl.staringInHaunt = false;
+                dressGirl.disappearingFromStare = false;
+                dressGirl.agent.speed = 5.25f;
+                dressGirl.creatureAnimator.SetBool("Walk", true);
+                dressGirl.timer = 0f;
+                dressGirl.SetMovingTowardsTargetPlayer(player);
+                dressGirl.moveTowardsDestination = true;
+                dressGirl.creatureVoice.volume = 1f;
+                dressGirl.creatureVoice.clip = dressGirl.breathingSFX;
+                dressGirl.creatureVoice.Play();
+                dressGirl.SFXVolumeLerpTo = 1f;
+                dressGirl.creatureSFX.volume = 1f;
+                if (!DressGirlAIPatch.ChaseTimes.ContainsKey(dressGirl.NetworkObjectId))
+                    DressGirlAIPatch.ChaseTimes.Add(dressGirl.NetworkObjectId, Time.time);
+            }
+            dressGirl.hauntingPlayer = player;
+            if (!DressGirlAIPatch.ChasingGirls.ContainsKey(dressGirl.NetworkObjectId))
+                DressGirlAIPatch.ChasingGirls.Add(dressGirl.NetworkObjectId, playerId);
+        }
 
         private static IEnumerator SetPlayerUI(PlayerControllerB player, bool critical = false) {
             yield return new WaitForFixedUpdate();
             HUDManager.Instance.UpdateHealthUI(player.health, false);
             player.MakeCriticallyInjured(critical);
         }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void AgroBrackenOrSpawnServerRpc(int playerId) {
+            if (!StartOfRound.Instance.allPlayerScripts[playerId].isPlayerControlled) return;
+            
+            FlowermanAI bracken = null;
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (!(enemy is FlowermanAI flowerman) || flowerman.isEnemyDead || !flowerman.IsSpawned) continue;
+                bracken = flowerman;
+                break;
+            }
+            
+            if (bracken == null) {
+                Transform spawnTransform = Helper.GetRandomSpawnLocation();
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
+            
+                GameObject flowerman = Instantiate(Helper.Enemies.FlowerMan.enemyPrefab, spawnPos, Quaternion.identity);
+                flowerman.GetComponentInChildren<NetworkObject>().Spawn(true);
+                RoundManager.Instance.SpawnedEnemies.Add(flowerman.GetComponent<FlowermanAI>());
+                flowerman.GetComponent<FlowermanAI>().SetEnemyOutside();
+                bracken = flowerman.GetComponent<FlowermanAI>();
+                bracken.SyncPositionToClients();
+            }
+            
+            SyncBrackenPropertiesClientRpc(playerId, bracken.NetworkObjectId);
+        }
         
+        [ClientRpc]
+        public void SyncBrackenPropertiesClientRpc(int playerId, ulong networkId) {
+            FlowermanAI bracken = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == networkId) as FlowermanAI;
+            if (bracken == null) return;
+            if (!FlowermanAIPatch.AngryBrackens.ContainsKey(bracken.NetworkObjectId)) 
+                FlowermanAIPatch.AngryBrackens.Add(bracken.NetworkObjectId, new KeyValuePair<int, float>(playerId, Time.time));
+            StartCoroutine(SetBrackenProperties(bracken, playerId));
+        }
+        
+        private IEnumerator SetBrackenProperties(FlowermanAI bracken, int playerId) {
+            yield return new WaitUntil(() => bracken.agent != null);
+            bracken.SwitchToBehaviourState(2);
+            bracken.targetPlayer = StartOfRound.Instance.allPlayerScripts[playerId];
+            bracken.angerMeter = 2.5f;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void DogChaseOrSpawnServerRpc(int playerId) {
+            if (!StartOfRound.Instance.allPlayerScripts[playerId].isPlayerControlled) return;
+            MouthDogAI dog = null;
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (!(enemy is MouthDogAI mouthDog) || mouthDog.isEnemyDead || !mouthDog.IsSpawned) continue;
+                dog = mouthDog;
+                break;
+            }
+
+            if (dog == null) {
+                Transform spawnTransform = Helper.GetRandomSpawnLocation(false);
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
+            
+                GameObject mouthDog = Instantiate(Helper.Enemies.MouthDog.enemyPrefab, spawnPos, Quaternion.identity);
+                mouthDog.GetComponentInChildren<NetworkObject>().Spawn(true);
+                RoundManager.Instance.SpawnedEnemies.Add(mouthDog.GetComponent<MouthDogAI>());
+                mouthDog.GetComponent<MouthDogAI>().SetEnemyOutside();
+                dog = mouthDog.GetComponent<MouthDogAI>();
+                dog.SyncPositionToClients();
+            }
+            SyncDogPropertiesClientRpc(playerId, dog.NetworkObjectId);
+        }
+        
+        [ClientRpc]
+        public void SyncDogPropertiesClientRpc(int playerId, ulong networkId) {
+            MouthDogAI dog = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == networkId) as MouthDogAI;
+            if (dog == null) return;
+            if (!MouthDogAIPatch.ChasingDogs.ContainsKey(dog.NetworkObjectId)) MouthDogAIPatch.ChasingDogs.Add(dog.NetworkObjectId, playerId);
+            StartCoroutine(SetDogProperties(dog, StartOfRound.Instance.allPlayerScripts[playerId]));
+        }
+        
+        private IEnumerator SetDogProperties(MouthDogAI dog, PlayerControllerB player) {
+            yield return new WaitUntil(() => dog.agent != null);
+            dog.ReactToOtherDogHowl(player.transform.position);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void SetDogPathServerRpc(ulong dogId, int targetedPlayer) {
+            SetDogPathClientRpc(dogId, targetedPlayer);
+        }
+        
+        [ClientRpc]
+        public void SetDogPathClientRpc(ulong dogId, int targetedPlayer) {
+            PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[targetedPlayer];
+            if (!player.isPlayerControlled) return;
+            MouthDogAI dog = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == dogId) as MouthDogAI;
+            if (dog == null) return;
+            dog.ReactToOtherDogHowl(player.transform.position);
+            dog.suspicionLevel = 12;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void ShipLeaveEarlyServerRpc() {
+            ShipLeaveEarlyClientRpc();
+        }
+        
+        [ClientRpc]
+        public void ShipLeaveEarlyClientRpc() {
+            TimeOfDay.Instance.votesForShipToLeaveEarly = StartOfRound.Instance.connectedPlayersAmount + 1 - StartOfRound.Instance.livingPlayers;
+            TimeOfDay.Instance.SetShipLeaveEarlyServerRpc();
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void GiantChasePlayerOrSpawnServerRpc(int playerId) {
+            PlayerControllerB chasedPlayer = StartOfRound.Instance.allPlayerScripts[playerId];
+            if (!chasedPlayer.isPlayerControlled) return;
+            ForestGiantAI giant = null;
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (!(enemy is ForestGiantAI forestGiant) || forestGiant.isEnemyDead || !forestGiant.IsSpawned) continue;
+                giant = forestGiant;
+                break;
+            }
+
+            if (giant == null) {
+                Transform spawnTransform = Helper.GetRandomSpawnLocation(false);
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
+                
+                GameObject forestGiant = Instantiate(Helper.Enemies.ForestGiant.enemyPrefab, spawnPos, Quaternion.identity);
+                forestGiant.GetComponentInChildren<NetworkObject>().Spawn(true);
+                RoundManager.Instance.SpawnedEnemies.Add(forestGiant.GetComponent<ForestGiantAI>());
+                forestGiant.GetComponent<ForestGiantAI>().SetEnemyOutside();
+                giant = forestGiant.GetComponent<ForestGiantAI>();
+                giant.SyncPositionToClients();
+            }
+            GiantSetPropertiesClientRpc(playerId, giant.NetworkObjectId);
+        }
+        
+        [ClientRpc]
+        public void GiantSetPropertiesClientRpc(int playerId, ulong networkId) {
+            ForestGiantAI giant = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == networkId) as ForestGiantAI;
+            if (giant == null) return;
+            PluginLogger.Debug("Adding giant to chasing list");
+            if (!ForestGiantAIPatch.ChasingGiants.ContainsKey(giant.NetworkObjectId)) ForestGiantAIPatch.ChasingGiants.Add(giant.NetworkObjectId, playerId);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void BirdChaseOrSpawnServerRpc(int playerId) {
+            PlayerControllerB chasedPlayer = StartOfRound.Instance.allPlayerScripts[playerId];
+            if (!chasedPlayer.isPlayerControlled) return;
+            RadMechAI bird = null;
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (!(enemy is RadMechAI radMech) || radMech.isEnemyDead || !radMech.IsSpawned) continue;
+                bird = radMech;
+                break;
+            }
+
+            if (bird == null) {
+                Transform spawnTransform = Helper.GetRandomSpawnLocation(false);
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
+                
+                GameObject radMech = Instantiate(Helper.Enemies.RadMech.enemyPrefab, spawnPos, Quaternion.identity);
+                radMech.GetComponentInChildren<NetworkObject>().Spawn(true);
+                RoundManager.Instance.SpawnedEnemies.Add(radMech.GetComponent<RadMechAI>());
+                radMech.GetComponent<RadMechAI>().SetEnemyOutside();
+                bird = radMech.GetComponent<RadMechAI>();
+                bird.SyncPositionToClients();
+            }
+            BirdSetPropertiesClientRpc(playerId, bird.NetworkObjectId);
+        }
+        
+        [ClientRpc]
+        public void BirdSetPropertiesClientRpc(int playerId, ulong networkId) {
+            RadMechAI bird = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == networkId) as RadMechAI;
+            if (bird == null) return;
+            PluginLogger.Debug("Adding bird to chasing list");
+            if (!RadMechAIPatch.ChasingBirds.ContainsKey(bird.NetworkObjectId)) RadMechAIPatch.ChasingBirds.Add(bird.NetworkObjectId, playerId);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void TeleportOrSpawnWornServerRpc(int playerId) {
+            PlayerControllerB chasedPlayer = StartOfRound.Instance.allPlayerScripts[playerId];
+            if (!chasedPlayer.isPlayerControlled) return;
+            SandWormAI worm = null;
+            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
+                if (!(enemy is SandWormAI sandWorm) || sandWorm.isEnemyDead || !sandWorm.IsSpawned) continue;
+                worm = sandWorm;
+                break;
+            }
+
+            if (worm == null) {
+                Transform spawnTransform = Helper.GetRandomSpawnLocation(false);
+                if (spawnTransform == null) {
+                    PluginLogger.Error("No spawn location found");
+                    return;
+                }
+                Vector3 spawnPos = spawnTransform.position;
+                
+                GameObject sandWorm = Instantiate(Helper.Enemies.SandWorm.enemyPrefab, spawnPos, Quaternion.identity);
+                sandWorm.GetComponentInChildren<NetworkObject>().Spawn(true);
+                RoundManager.Instance.SpawnedEnemies.Add(sandWorm.GetComponent<SandWormAI>());
+                sandWorm.GetComponent<SandWormAI>().SetEnemyOutside();
+                worm = sandWorm.GetComponent<SandWormAI>();
+                worm.SyncPositionToClients();
+            }
+
+            StartCoroutine(TeleportEnemyWhenReady(worm, chasedPlayer.transform.position, outside: true));
+        }
+
+        public static IEnumerator TeleportEnemyWhenReady(EnemyAI enemy, Vector3 position, bool exitEnter = false,
+            bool outside = false) {
+            yield return new WaitUntil(() => enemy.agent != null);
+            TeleportEnemy(enemy, position, exitEnter, outside);
+        }
 
         public static void TeleportEnemy(EnemyAI enemy, Vector3 position, bool exitEnter = false, bool outside = false) {
             if (exitEnter) {
@@ -482,15 +791,7 @@ namespace LCTarrotCard {
         }
         
         
-        private static IEnumerator PopDelay(float delay) {
-            yield return new WaitForSeconds(delay);
-            PluginLogger.Debug("Popping jesters");
-            foreach (EnemyAI enemy in RoundManager.Instance.SpawnedEnemies) {
-                if (enemy is JesterAI jester && !jester.isEnemyDead) {
-                    jester.SwitchToBehaviourState(2);
-                }
-            }
-        }
+        
         
         
         

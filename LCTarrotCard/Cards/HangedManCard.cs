@@ -13,9 +13,14 @@ namespace LCTarrotCard.Cards {
             return Assets.Materials.BurnRed;
         }
 
-        public override void ExecuteEffect(PlayerControllerB playerWhoDrew) {
+        public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
             if (!playerWhoDrew.isPlayerDead && playerWhoDrew.isPlayerControlled) 
                 Networker.Instance.KillPlayerServerRpc((int)playerWhoDrew.playerClientId, new Vector3(0, 1, 0), CauseOfDeath.Unknown);
+            return "";
+        }
+
+        public override string GetCardName() {
+            return "The Hanged Man";
         }
 
         public HangedManCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }

@@ -19,7 +19,7 @@ namespace LCTarrotCard.Cards {
         protected readonly AudioSource cardAudio;
         protected readonly GameObject cardPrefab;
 
-        public virtual void InitCard() {
+        public virtual void InitCard(System.Random random) {
             Renderer renderer = cardPrefab.GetComponent<Renderer>();
             Material[] updatedMats = renderer.materials;
             updatedMats[0] = GetCardMaterial();
@@ -28,7 +28,8 @@ namespace LCTarrotCard.Cards {
         }
         public abstract Material GetCardMaterial();
         public abstract Material GetCardBurn();
-        public abstract void ExecuteEffect(PlayerControllerB playerWhoDrew);
+        public abstract string ExecuteEffect(PlayerControllerB playerWhoDrew);
+        public abstract string GetCardName();
 
         public virtual IEnumerator CardPullingCoroutine() {
             cardAudio.PlayOneShot(Assets.PullCardClips[Random.Range(0, Assets.PullCardClips.Count)]);

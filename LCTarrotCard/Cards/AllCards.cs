@@ -1,39 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using LCTarrotCard.Config;
 using Random = UnityEngine.Random;
 
 namespace LCTarrotCard.Cards {
     
     public static  class AllCards {
         
-        public static class ProbabilityTable {
-            public static int TowerCard = 20;
-            public static int WheelCard = 20;
-            public static int SunCard = 5;
-            public static int MoonCard = 5;
-            public static int DevilCard = 10;
-            public static int HermitCard = 10;
-            public static int HighPriestessCard = 2;
-            public static int DeathCard = 10;
-            public static int HangedManCard = 1;
-            public static int FoolCard = 17;
+        public static class BaseProbabilityTable {
+            public static readonly int TowerCard = 20;
+            public static readonly int WheelCard = 20;
+            public static readonly int SunCard = 5;
+            public static readonly int MoonCard = 5;
+            public static readonly int DevilCard = 10;
+            public static readonly int HermitCard = 10;
+            public static readonly int HighPriestessCard = 2;
+            public static readonly int DeathCard = 10;
+            public static readonly int HangedManCard = 1;
+            public static readonly int FoolCard = 17;
         }
 
         public static readonly Dictionary<Type, int> AllCardsWeighted = new Dictionary<Type, int>();
         private static int _totalWeight;
         
         internal static void Init() {
-            AllCardsWeighted.Add(typeof(TowerCard), ProbabilityTable.TowerCard);
-            AllCardsWeighted.Add(typeof(WheelCard), ProbabilityTable.WheelCard);
-            AllCardsWeighted.Add(typeof(SunCard), ProbabilityTable.SunCard);
-            AllCardsWeighted.Add(typeof(MoonCard), ProbabilityTable.MoonCard);
-            AllCardsWeighted.Add(typeof(DevilCard), ProbabilityTable.DevilCard);
-            AllCardsWeighted.Add(typeof(HermitCard), ProbabilityTable.HermitCard);
-            AllCardsWeighted.Add(typeof(HighPriestessCard), ProbabilityTable.HighPriestessCard);
-            AllCardsWeighted.Add(typeof(DeathCard), ProbabilityTable.DeathCard);
-            AllCardsWeighted.Add(typeof(HangedManCard), ProbabilityTable.HangedManCard);
-            AllCardsWeighted.Add(typeof(FoolCard), ProbabilityTable.FoolCard);
+            AllCardsWeighted.Add(typeof(TowerCard), GetValidWeight(ConfigManager.TowerCardChance.Value, BaseProbabilityTable.TowerCard));
+            AllCardsWeighted.Add(typeof(WheelCard), GetValidWeight(ConfigManager.WheelCardChance.Value, BaseProbabilityTable.WheelCard));
+            AllCardsWeighted.Add(typeof(SunCard), GetValidWeight(ConfigManager.SunCardChance.Value, BaseProbabilityTable.SunCard));
+            AllCardsWeighted.Add(typeof(MoonCard), GetValidWeight(ConfigManager.MoonCardChance.Value, BaseProbabilityTable.MoonCard));
+            AllCardsWeighted.Add(typeof(DevilCard), GetValidWeight(ConfigManager.DevilCardChance.Value, BaseProbabilityTable.DevilCard));
+            AllCardsWeighted.Add(typeof(HermitCard), GetValidWeight(ConfigManager.HermitCardChance.Value, BaseProbabilityTable.HermitCard));
+            AllCardsWeighted.Add(typeof(HighPriestessCard), GetValidWeight(ConfigManager.HighPriestessCardChance.Value, BaseProbabilityTable.HighPriestessCard));
+            AllCardsWeighted.Add(typeof(DeathCard), GetValidWeight(ConfigManager.DeathCardChance.Value, BaseProbabilityTable.DeathCard));
+            AllCardsWeighted.Add(typeof(HangedManCard), GetValidWeight(ConfigManager.HangedManCardChance.Value, BaseProbabilityTable.HangedManCard));
+            AllCardsWeighted.Add(typeof(FoolCard), GetValidWeight(ConfigManager.FoolCardChance.Value, BaseProbabilityTable.FoolCard));
             RecalculateTotalWeight();
+        }
+        
+        private static int GetValidWeight(int weight, int defaultWeight) {
+            return weight >= 0 && weight <= 100 ? weight : defaultWeight;
         }
         
         public static void RegisterCard(Type cardType, int weight) {
@@ -73,8 +78,6 @@ namespace LCTarrotCard.Cards {
                 }
                 currentWeight += entry.Value;
             }
-            
-            PluginLogger.Debug(cardChoose.Name);
 
             if (typeof(Card).IsAssignableFrom(cardChoose)) return cardChoose;
             

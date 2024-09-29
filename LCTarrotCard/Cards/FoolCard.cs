@@ -20,9 +20,9 @@ namespace LCTarrotCard.Cards {
 
         private Material cardToMimic;
         
-        public override void InitCard() {
-            cardToMimic = allCardMat[Random.Range(0, allCardMat.Length)];
-            base.InitCard();
+        public override void InitCard(System.Random random) {
+            cardToMimic = allCardMat[random.Next(0, allCardMat.Length)];
+            base.InitCard(random);
         }
 
         public override Material GetCardMaterial() {
@@ -33,7 +33,13 @@ namespace LCTarrotCard.Cards {
             return Assets.Materials.BurnPurple;
         }
 
-        public override void ExecuteEffect(PlayerControllerB playerWhoDrew) { }
+        public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
+            return "You have been fooled!";
+        }
+
+        public override string GetCardName() {
+            return "The Fool";
+        }
 
         public override IEnumerator CardPullingCoroutine() {
             cardAudio.PlayOneShot(Assets.PullCardClips[Random.Range(0, Assets.PullCardClips.Count)]);

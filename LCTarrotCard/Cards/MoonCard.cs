@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using GameNetcodeStuff;
+using LCTarrotCard.Config;
 using LCTarrotCard.Ressource;
 using UnityEngine;
 
@@ -14,25 +15,36 @@ namespace LCTarrotCard.Cards {
             return Assets.Materials.BurnWhite;
         }
 
-        public override void ExecuteEffect(PlayerControllerB playerWhoDrew) {
+        public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
             int amountOfObjects = playerWhoDrew.ItemSlots.Count(item => item);
-            int rng = Random.Range(0, 10);
+            int rng = Random.Range(0, 100);
 
-            if (rng > 6 && amountOfObjects > 2) {
-                float randomValueMultiplier = Random.Range(0.1f, 0.9f);
+            if (ConfigManager.SunHealOrDamageChance.Value < rng) {
+                PluginLogger.Debug("Damaging player to 2 health");
+                if (!playerWhoDrew.isPlayerDead && playerWhoDrew.health > 2) 
+                    Networker.Instance.SetPlayerHealthServerRpc((int) playerWhoDrew.playerClientId, 2);
+                return "You feel weak";
+            }
+
+            if (amountOfObjects > 2 && Random.Range(0, 4) != 0) {
+                float randomValueMultiplier = Random.Range(ConfigManager.MoonMinMultiplyRange.Value, 
+                    ConfigManager.MoonMaxMultiplyRange.Value);
                 PluginLogger.Debug("Multiplying inventory value by " + randomValueMultiplier);
                 Networker.Instance.MultiplyInventoryValueServerRpc((int)playerWhoDrew.playerClientId, randomValueMultiplier);
             }
-            else if (rng == 0) {
-                float randomValueMultiplier = Random.Range(0.1f, 0.9f);
+            else {
+                float randomValueMultiplier = Random.Range(ConfigManager.MoonMinMultiplyRange.Value, 
+                    ConfigManager.MoonMaxMultiplyRange.Value);
                 PluginLogger.Debug("Multiplying random scrap value by " + randomValueMultiplier);
                 Networker.Instance.MultiplyRandomScrapValueServerRpc(randomValueMultiplier);
             }
-            else {
-                PluginLogger.Debug("Damaging player to 2 health");
-                if (!playerWhoDrew.isPlayerDead && playerWhoDrew.health > 2) Networker.Instance.SetPlayerHealthServerRpc((int) playerWhoDrew.playerClientId, 2);
-            }
             
+            return "Somehow, it seems like some items are less valuable";
+
+        }
+
+        public override string GetCardName() {
+            return "The Moon";
         }
 
         public MoonCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }

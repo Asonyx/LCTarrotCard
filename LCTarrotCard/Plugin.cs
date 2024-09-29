@@ -6,6 +6,7 @@ using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LCTarrotCard.Cards;
+using LCTarrotCard.Config;
 using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
 using Unity.Netcode;
@@ -28,6 +29,8 @@ namespace LCTarrotCard {
             logger = BepInEx.Logging.Logger.CreateLogSource(PluginConstants.PLUGIN_GUID);
             harmony = new Harmony(PluginConstants.PLUGIN_GUID);
             
+            ConfigManager.Init(Config);
+            
             Assets.Load();
 
             AllCards.Init();
@@ -35,6 +38,7 @@ namespace LCTarrotCard {
             harmony.PatchAll();
             NetcodePatcher();
             
+            logger.LogInfo("LCTarotCard loaded successfully");
         }
 
         internal static KeyboardShortcut DebugBtn = new KeyboardShortcut(KeyCode.BackQuote);
@@ -64,29 +68,26 @@ namespace LCTarrotCard {
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
         private static void TestPatch(PlayerControllerB __instance) {
-            if (PluginConstants.DEBUG_MODE && __instance.IsOwner && Plugin.DebugBtn.IsDown()) {
-                PluginLogger.Debug("Spawning item");
-                GameObject obj = UnityEngine.Object.Instantiate(Assets.TarotItem.spawnPrefab, __instance.transform.position, __instance.transform.rotation);
-                
-                GrabbableObject component = obj.GetComponent<GrabbableObject>();
-                component.transform.rotation = Quaternion.Euler(component.itemProperties.restingRotation);
-                component.fallTime = 0f;
-                component.scrapValue = 1;
-                NetworkObject no = obj.GetComponent<NetworkObject>();
-                no.Spawn();
-                component.FallToGround(true);
-            }
+            if (!ConfigManager.DebugModeSetting.Value || !__instance.IsOwner || !Plugin.DebugBtn.IsDown()) return;
+            
+            PluginLogger.Debug("Spawning item");
+            GameObject obj = UnityEngine.Object.Instantiate(Assets.TarotItem.spawnPrefab, __instance.transform.position, __instance.transform.rotation);
+            GrabbableObject component = obj.GetComponent<GrabbableObject>();
+            component.transform.rotation = Quaternion.Euler(component.itemProperties.restingRotation);
+            component.fallTime = 0f;
+            component.scrapValue = 1;
+            NetworkObject no = obj.GetComponent<NetworkObject>();
+            no.Spawn();
+            component.FallToGround(true);
 
-           
+
         }
 
     }
 
     public static class PluginLogger {
-        public static bool ShowDebug = true;
-        
         public static void Debug(object o) {
-            if (ShowDebug) Plugin.Instance.logger.LogDebug("[DEBUG] " + o);
+            if (ConfigManager.DebugModeSetting.Value) Plugin.Instance.logger.LogDebug("[DEBUG] " + o);
         }
 
         public static void Info(object o) {
@@ -105,7 +106,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.0.3";
-        internal const bool DEBUG_MODE = false;
+        public const string PLUGIN_VERSION = "1.1.0";
     }
 }

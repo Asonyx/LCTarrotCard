@@ -36,9 +36,11 @@ namespace LCTarrotCard.Util {
         public int GetRarityFor(Planet planet) {
             return rarities[planet];
         }
-
-        public int GetRarityFor(int planet) {
-            return rarities.Values.ToList()[planet];
+        
+        public void MultiplyAllRarities(float multiplier) {
+            foreach (Planet planet in Enum.GetValues(typeof(Planet))) {
+                rarities[planet] = (int) (rarities[planet] * multiplier);
+            }
         }
 
         public void SetValues(int experimentation = -1, int assurance = -1, int vow = -1, int march = -1, int offense = -1, int adamance = -1, 

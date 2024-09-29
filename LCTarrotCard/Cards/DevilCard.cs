@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using GameNetcodeStuff;
+using LCTarrotCard.Config;
 using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
 using UnityEngine;
@@ -16,8 +17,8 @@ namespace LCTarrotCard.Cards {
             return Assets.Materials.BurnRed;
         }
 
-        public override void ExecuteEffect(PlayerControllerB playerWhoDrew) {
-            int rng = Random.Range(0, 4);
+        public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
+            int rng = Random.Range(0, 100);
 
             List<int> playerIds = new List<int>();
             for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++) {
@@ -33,17 +34,23 @@ namespace LCTarrotCard.Cards {
                 j++;
             } while (randomPlayer.isPlayerDead || !randomPlayer.isPlayerControlled && j < playerIds.Count);
             
-            if (randomPlayer.isPlayerDead || !randomPlayer.isPlayerControlled) return;
-            
-            
-            if (rng <= 2) {
+            if (randomPlayer.isPlayerDead || !randomPlayer.isPlayerControlled) return "Error : No player to target";
+
+
+            if (ConfigManager.DevilBlowChance.Value < rng) {
+                randomPlayer.StartCoroutine(WaitAndBlow(randomPlayer));
                 
-                Vector3 tpPos = randomPlayer.transform.position + randomPlayer.gameplayCamera.transform.forward * 5;
-                Networker.Instance.TeleportRandomEntityServerRpc(tpPos, randomPlayer.isInsideFactory);
             }
             else {
-                randomPlayer.StartCoroutine(WaitAndBlow(randomPlayer));
+                Vector3 tpPos = randomPlayer.transform.position + randomPlayer.transform.forward * 5;
+                Networker.Instance.TeleportRandomEntityServerRpc(tpPos, randomPlayer.isInsideFactory);
             }
+            
+            return "A mysterious force is moving";
+        }
+
+        public override string GetCardName() {
+            return "The Devil";
         }
 
         private static IEnumerator WaitAndBlow(PlayerControllerB player) {

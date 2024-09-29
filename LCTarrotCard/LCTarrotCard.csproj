@@ -99,9 +99,15 @@
         <Compile Include="Cards\SunCard.cs" />
         <Compile Include="Cards\TowerCard.cs" />
         <Compile Include="Cards\WheelCard.cs" />
+        <Compile Include="Config\ConfigManager.cs" />
         <Compile Include="Items\TarotBehaviour.cs" />
         <Compile Include="Networker.cs" />
+        <Compile Include="Patches\DressGirlAIPatch.cs" />
+        <Compile Include="Patches\FlowermanAIPatch.cs" />
+        <Compile Include="Patches\ForestGiantAIPatch.cs" />
+        <Compile Include="Patches\MouthDogAIPatch.cs" />
         <Compile Include="Patches\PlayerControllerBPatch.cs" />
+        <Compile Include="Patches\RadMechAIPatch.cs" />
         <Compile Include="Plugin.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="Ressource\Assets.cs" />

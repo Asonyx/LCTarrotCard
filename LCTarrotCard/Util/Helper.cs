@@ -10,7 +10,7 @@ namespace LCTarrotCard.Util {
     public class Helper {
         
         
-        public static class Enemies {
+        public static class Enemies { // Not up to date, made in v56
 
             public static EnemyType Baboon;
             public static EnemyType Slime;
@@ -54,14 +54,11 @@ namespace LCTarrotCard.Util {
             EnemyType[] enemyArray = Resources.FindObjectsOfTypeAll<EnemyType>().Concat(Object.FindObjectsByType<EnemyType>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID)).ToArray();
             PluginLogger.Debug("Found " + enemyArray.Length + " enemies");
             foreach (EnemyType currentEnemy in enemyArray) {
-                PluginLogger.Debug("Found enemy : " + currentEnemy.enemyName);
                 if (!Enemies.AllEnemies.Contains(currentEnemy)) {
                     Enemies.AllEnemies.Add(currentEnemy);
                     if (currentEnemy.enemyName != "Lasso" || currentEnemy.enemyName != "Red pill")
                         Enemies.SpawnableEnemies.Add(currentEnemy);
                 }
-                
-                
                 
                 switch (currentEnemy.enemyName) {
                     case "Baboon hawk":
@@ -145,6 +142,9 @@ namespace LCTarrotCard.Util {
                     case "Spring":
                         Enemies.SpringMan = currentEnemy;
                         break;
+                    default:
+                        PluginLogger.Info("Unhandled enemy : " + currentEnemy.enemyName);
+                        break;
                 }
             }
         }
@@ -159,6 +159,34 @@ namespace LCTarrotCard.Util {
                 int k = Rng.Next(n + 1);  
                 (list[k], list[n]) = (list[n], list[k]);
             }  
+        }
+
+        public static GameObject[] GetAllInsideAINodes() {
+            return GameObject.FindGameObjectsWithTag("AINode");
+        }
+        
+        public static GameObject[] GetAllOutsideAINodes() {
+            return GameObject.FindGameObjectsWithTag("OutsideAINode");
+        }
+        
+        public static EnemyVent[] GetAllEnemyVents() {
+            return Object.FindObjectsOfType<EnemyVent>();
+        }
+
+        [CanBeNull]
+        public static Transform GetRandomSpawnLocation(bool inside = true, bool useVentsInstead = true) {
+            if (inside) {
+                EnemyVent[] vents = GetAllEnemyVents();
+                if (vents.Length > 0 && useVentsInstead) {
+                    return vents[Rng.Next(vents.Length)].transform;
+                }
+                GameObject[] nodes = GetAllInsideAINodes();
+                if (nodes.Length == 0) return null;
+                return nodes[Rng.Next(nodes.Length)].transform;
+            }
+            GameObject[] nodesOutside = GetAllOutsideAINodes();
+            if (nodesOutside.Length == 0) return null;
+            return nodesOutside[Rng.Next(nodesOutside.Length)].transform;
         }
         
         public static GameObject ClosestAINode(Vector3 position, bool inside) {

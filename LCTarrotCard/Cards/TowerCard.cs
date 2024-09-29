@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using LCTarrotCard.Config;
 using LCTarrotCard.Ressource;
 using UnityEngine;
 
@@ -13,15 +14,26 @@ namespace LCTarrotCard.Cards {
             return Assets.Materials.BurnBlue;
         }
 
-        public override void ExecuteEffect(PlayerControllerB playerWhoDrew) {
+        private static readonly string[] messages =
+        {
+            "I can feel a presence somewhere", "Is there a ghost fooling around ?", "It feels like I'm not alone",
+            "What was that noise ?", "I think I saw something", "Something moved !"
+        };
+        
+        public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
+            int totalWeight = ConfigManager.TowerShipLeaveChance.Value + ConfigManager.TowerDoorsChance.Value +
+                              ConfigManager.TowerSecurityDoorsChance.Value + ConfigManager.TowerShipDoorChance.Value +
+                              ConfigManager.TowerBreakerChance.Value;
+            int rng = Random.Range(0, totalWeight);
+            string message = messages[Random.Range(0, messages.Length)];
             
-            int rng = Random.Range(0, 60);
-            
-            if (rng == 0) {
-                PluginLogger.Debug("Ship is leaving");
-                StartOfRound.Instance.ShipLeaveAutomatically(true);
+            if (rng <= ConfigManager.TowerShipLeaveChance.Value) {
+                PluginLogger.Debug("Ship will leave early");
+                Networker.Instance.ShipLeaveEarlyServerRpc();
+                return message;
             }
-            else if (rng <= 22) {
+
+            if (rng <= ConfigManager.TowerShipLeaveChance.Value + ConfigManager.TowerSecurityDoorsChance.Value) {
                 PluginLogger.Debug("Opening or closing random security doors");
                 TerminalAccessibleObject[] objs = Object.FindObjectsOfType<TerminalAccessibleObject>();
                 foreach (TerminalAccessibleObject terminalObj in objs) {
@@ -29,20 +41,35 @@ namespace LCTarrotCard.Cards {
                         terminalObj.SetDoorToggleLocalClient();
                     }
                 }
-            }
-            else if (rng <= 40) {
-                PluginLogger.Debug("Opening or closing rng doors");
-                Networker.Instance.OpenOrCloseRandomDoorServerRpc((int)playerWhoDrew.playerClientId);
-            }
-            else if (rng <= 55) {
-                PluginLogger.Debug("Inverting ship door state");
-                Networker.Instance.SetShipDoorStateServerRpc(StartOfRound.Instance.hangarDoorsClosed);
-            }
-            else {
-                PluginLogger.Debug("Turning off breaker");
-                Networker.Instance.BreakerOffServerRpc();
+                return message;
             }
 
+            if (rng <= ConfigManager.TowerShipLeaveChance.Value + ConfigManager.TowerSecurityDoorsChance.Value + 
+                ConfigManager.TowerDoorsChance.Value) {
+                PluginLogger.Debug("Opening or closing rng doors");
+                Networker.Instance.OpenOrCloseRandomDoorServerRpc((int)playerWhoDrew.playerClientId);
+                return message;
+            }
+
+            if (rng <= ConfigManager.TowerShipLeaveChance.Value + ConfigManager.TowerSecurityDoorsChance.Value + 
+                ConfigManager.TowerDoorsChance.Value + ConfigManager.TowerShipDoorChance.Value) {
+                PluginLogger.Debug("Inverting ship door state");
+                Networker.Instance.SetShipDoorStateServerRpc(StartOfRound.Instance.hangarDoorsClosed);
+                return message;
+            }
+
+            if (ConfigManager.TowerBreakerChance.Value > 0) {
+                PluginLogger.Debug("Turning off breaker");
+                Networker.Instance.BreakerOffServerRpc();
+                return message;
+            }
+            
+            return "Nothing happened";
+
+        }
+
+        public override string GetCardName() {
+            return "The Tower";
         }
 
         public TowerCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }

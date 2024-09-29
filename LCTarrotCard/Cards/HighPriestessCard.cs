@@ -13,7 +13,7 @@ namespace LCTarrotCard.Cards {
             return Assets.Materials.BurnYellow;
         }
 
-        public override void ExecuteEffect(PlayerControllerB playerWhoDrew) {
+        public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
             int foundDeadPlayer = -1;
             for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++) {
                 PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[i];
@@ -22,16 +22,24 @@ namespace LCTarrotCard.Cards {
                 foundDeadPlayer = i;
                 break;
             }
-            
+
 
             if (foundDeadPlayer != -1) {
-                PluginLogger.Debug("Reviving player " + StartOfRound.Instance.allPlayerScripts[foundDeadPlayer].playerUsername);
+                PluginLogger.Debug("Reviving player " +
+                                   StartOfRound.Instance.allPlayerScripts[foundDeadPlayer].playerUsername);
                 Networker.Instance.RevivePlayerServerRpc(foundDeadPlayer);
+                return StartOfRound.Instance.allPlayerScripts[foundDeadPlayer].playerUsername + " is back from the dead";
             }
-            else {
-                PluginLogger.Debug("No dead player found, allowing extra life");
-                Networker.Instance.AllowExtraLifeServerRpc();
-            }
+
+            PluginLogger.Debug("No dead player found, allowing extra life");
+            
+            Networker.Instance.AllowExtraLifeServerRpc();
+                
+            return "Your team has been granted an extra life";
+        }
+
+        public override string GetCardName() {
+            return "The High Priestess";
         }
 
         public HighPriestessCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }
