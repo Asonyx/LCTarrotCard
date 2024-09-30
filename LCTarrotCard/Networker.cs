@@ -8,7 +8,6 @@ using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace LCTarrotCard {
     [HarmonyPatch]
@@ -300,8 +299,12 @@ namespace LCTarrotCard {
         
         [ClientRpc]
         public void MultiplyInventoryValueClientRpc(int playerId, float multiplier) {
+            if (StartOfRound.Instance.allPlayerScripts.Length <= playerId || !StartOfRound.Instance.allPlayerScripts[playerId].isPlayerControlled) return;
+            
             foreach (GrabbableObject item in StartOfRound.Instance.allPlayerScripts[playerId].ItemSlots) {
-                item.SetScrapValue((int)(item.scrapValue * multiplier));
+                if (item != null && item.enabled && item.itemProperties.isScrap && item.scrapValue > 0)
+                    item.SetScrapValue((int)(item.scrapValue * multiplier));
+                
             }
         }
         
@@ -315,7 +318,7 @@ namespace LCTarrotCard {
             System.Random rng = new System.Random(randomSeed);
             GrabbableObject[] items = FindObjectsOfType<GrabbableObject>();
             foreach (GrabbableObject item in items) {
-                if (item.enabled && item.itemProperties.isScrap && item.scrapValue > 0 && rng.Next(0, 5) == 0) {
+                if (item != null && item.enabled && item.itemProperties.isScrap && item.scrapValue > 0 && rng.Next(0, 5) == 0) {
                     item.SetScrapValue((int)(item.scrapValue * multiplier));
                 }
             }
@@ -791,12 +794,6 @@ namespace LCTarrotCard {
         }
         
         
-        
-        
-        
-        
-        
-
         public override void OnNetworkSpawn() {
             
             
@@ -806,10 +803,6 @@ namespace LCTarrotCard {
             
             base.OnNetworkSpawn();
         }
-
-
-        
-        
 
         [HarmonyPatch(typeof(StartOfRound), "Awake")]
         [HarmonyPostfix]

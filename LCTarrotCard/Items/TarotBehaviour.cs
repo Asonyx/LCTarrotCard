@@ -200,7 +200,7 @@ namespace LCTarrotCard.Items {
 
         [ServerRpc]
         public void ExecuteEffectServerRpc() {
-            if (!IsServer) return;
+            if (!IsServer && !IsHost) return;
             string hint;
             try {
                 hint = currentCardProperties.ExecuteEffect(playerWhoDrew);
