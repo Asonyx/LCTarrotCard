@@ -30,6 +30,13 @@ namespace LCTarrotCard.Patches {
             ___lostPlayerInChase = false;
 
         }
+
+        [HarmonyPatch("ReachForPlayerIfClose")]
+        [HarmonyPrefix]
+        internal static void ReachForPlayerIfClosePatch(ForestGiantAI __instance) {
+            if (!ChasingGiants.ContainsKey(__instance.NetworkObjectId)) return;
+            __instance.chasingPlayer = StartOfRound.Instance.allPlayerScripts[ChasingGiants[__instance.NetworkObjectId]];
+        }
         
     }
 }

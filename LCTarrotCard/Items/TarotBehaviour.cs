@@ -24,7 +24,7 @@ namespace LCTarrotCard.Items {
 
         private bool drawingCoroutinePlaying;
         
-        private Vector3 originalCardScale;
+        private readonly Vector3 originalCardScale = new Vector3(1, 1, 1);
 
         private readonly AnimationCurve controlCurve = new AnimationCurve(
             new Keyframe(0f, 0f, 0f, 0f, .5f, .5f),
@@ -33,11 +33,10 @@ namespace LCTarrotCard.Items {
         public override void Start() {
             base.Start();
             itemAudio = gameObject.GetComponent<AudioSource>();
-            originalCardScale = gameObject.transform.localScale;
             if (ConfigManager.DeckSize.Value > 0 && ConfigManager.DeckSize.Value <= 100) {
                 cardLeft = ConfigManager.DeckSize.Value;
             }
-            SetNumberOfCardsServerRpc(cardLeft);
+            if (IsOwner) SetNumberOfCardsServerRpc(cardLeft);
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true) {
@@ -80,7 +79,7 @@ namespace LCTarrotCard.Items {
             PluginLogger.Debug("Card left : " + cardLeft);
             if (playerHeldBy.playerClientId == GameNetworkManager.Instance.localPlayerController.playerClientId) 
                 SetControlTipsForItem();
-
+            
             if (cardLeft > 0) {
                 float thickness = cardLeft * 0.1f;
                 Vector3 newScale = new Vector3(originalCardScale.x, originalCardScale.y * thickness, originalCardScale.z);
@@ -115,7 +114,7 @@ namespace LCTarrotCard.Items {
             }
 
             yield return new WaitForSeconds(1.1f);
-            ExecuteEffectServerRpc();
+            if (IsServer || IsHost) ExecuteEffectServerRpc();
             yield return new WaitForSeconds(1f);
             drawingCoroutinePlaying = false;
             EndDrawingCard();
@@ -185,7 +184,6 @@ namespace LCTarrotCard.Items {
         public void SetNumberOfCardsClientRpc(int number) {
             cardLeft = number;
             if (cardLeft > 0) {
-                gameObject.transform.GetChild(0).gameObject.SetActive(true);
                 float thickness = cardLeft * 0.1f;
                 Vector3 newScale = new Vector3(originalCardScale.x, originalCardScale.y * thickness,
                     originalCardScale.z);
@@ -193,12 +191,13 @@ namespace LCTarrotCard.Items {
                 originalScale = newScale;
             }
             else {
+                PluginLogger.Debug("Warning : destroying cards");
                 gameObject.transform.GetChild(0).gameObject.SetActive(false);
                 DestroyServerRpc();
             }
         }
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         public void ExecuteEffectServerRpc() {
             if (!IsServer && !IsHost) return;
             string hint;

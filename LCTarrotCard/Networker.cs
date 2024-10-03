@@ -517,12 +517,17 @@ namespace LCTarrotCard {
 
         [ClientRpc]
         public void LittleGirlChaseClientRpc(int playerId, ulong networkId) {
+            if (playerId != (int)GameNetworkManager.Instance.localPlayerController.playerClientId) return;
+            
             DressGirlAI dressGirl = RoundManager.Instance.SpawnedEnemies.FirstOrDefault(enemy => enemy.NetworkObjectId == networkId) as DressGirlAI;
             if (dressGirl == null) return;
             PlayerControllerB player = StartOfRound.Instance.allPlayerScripts[playerId];
 
             if ((int)GameNetworkManager.Instance.localPlayerController.playerClientId == playerId) {
                 Vector3 hauntPos = player.transform.position + player.transform.forward * 5;
+                if (dressGirl.OwnerClientId != GameNetworkManager.Instance.localPlayerController.actualClientId) {
+                    dressGirl.ChangeOwnershipOfEnemy(GameNetworkManager.Instance.localPlayerController.actualClientId);
+                }
                 TeleportEnemy(dressGirl, hauntPos);
                 
                 dressGirl.EnableEnemyMesh(true, true);
@@ -782,9 +787,7 @@ namespace LCTarrotCard {
                 enemy.SetEnemyOutside(outside);
             }
 
-            if (enemy.OwnerClientId != GameNetworkManager.Instance.localPlayerController.actualClientId) {
-                enemy.ChangeOwnershipOfEnemy(GameNetworkManager.Instance.localPlayerController.actualClientId);
-            }
+            
 
             Vector3 newPos = enemy.ChooseClosestNodeToPosition(position).position;
             enemy.serverPosition = newPos;
