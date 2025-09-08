@@ -44,8 +44,7 @@ namespace LCTarrotCard {
         internal static KeyboardShortcut DebugBtn = new KeyboardShortcut(KeyCode.BackQuote);
         
         
-        private static void NetcodePatcher()
-        {
+        private static void NetcodePatcher() {
             Type[] types = Assembly.GetExecutingAssembly().GetTypes();
             foreach (Type type in types)
             {
@@ -78,7 +77,7 @@ namespace LCTarrotCard {
             component.scrapValue = 1;
             NetworkObject no = obj.GetComponent<NetworkObject>();
             no.Spawn();
-            component.FallToGround(true);
+            component.FallToGround();
 
 
         }
@@ -106,6 +105,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.1.1";
+        public const string PLUGIN_VERSION = "1.1.2";
     }
 }
