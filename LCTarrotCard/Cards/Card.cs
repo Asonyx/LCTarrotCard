@@ -19,6 +19,11 @@ namespace LCTarrotCard.Cards {
         protected readonly AudioSource cardAudio;
         protected readonly GameObject cardPrefab;
 
+        /// <summary>
+        /// Runs at the initialization of the card, used to set random parameters
+        /// Do not use UnityEngine.Random here, unless you want different results on each client
+        /// </summary>
+        /// <param name="random">A random object synced between all clients</param>
         public virtual void InitCard(System.Random random) {
             Renderer renderer = cardPrefab.GetComponent<Renderer>();
             Material[] updatedMats = renderer.materials;
@@ -26,11 +31,29 @@ namespace LCTarrotCard.Cards {
             renderer.materials = updatedMats;
             
         }
+        
+        /// <returns>The Material of the front of the card</returns>
         public abstract Material GetCardMaterial();
+        
+        
+        /// <returns>The Material of the burn effect of the card</returns>
         public abstract Material GetCardBurn();
+        
+        /// <summary>
+        /// Runs the effect of the card.
+        /// WARNING : This runs server-side only, use RPC to execute client-side code
+        /// </summary>
+        /// <param name="playerWhoDrew">The player who drew the Tarot card</param>
+        /// <returns>A generic description of what happened</returns>
         public abstract string ExecuteEffect(PlayerControllerB playerWhoDrew);
+        
+        
+        /// <returns>The name of the card</returns>
         public abstract string GetCardName();
 
+        /// <summary>
+        /// The coroutine that plays the card pulling animation and sound
+        /// </summary>
         public virtual IEnumerator CardPullingCoroutine() {
             cardAudio.PlayOneShot(Assets.PullCardClips[Random.Range(0, Assets.PullCardClips.Count)]);
             yield return new WaitForSeconds(2.2f);

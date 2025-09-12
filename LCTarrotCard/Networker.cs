@@ -796,6 +796,18 @@ namespace LCTarrotCard {
             enemy.SyncPositionToClients();
         }
         
+        // Start of Event section
+        
+        
+        
+        // End of Event section
+        
+        // Test 
+        
+        
+        
+        // End test
+        
         
         public override void OnNetworkSpawn() {
             

@@ -151,8 +151,7 @@ namespace LCTarrotCard.Util {
         
         private static readonly System.Random Rng = new System.Random();  
 
-        public static void Shuffle<T>(IList<T> list)  
-        {  
+        public static void Shuffle<T>(IList<T> list) {  
             int n = list.Count;  
             while (n > 1) {  
                 n--;  

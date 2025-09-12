@@ -9,7 +9,7 @@ namespace LCTarrotCard.Cards {
     public class WheelCard : Card {
 
         private bool outcome;
-
+        
         public override void InitCard(System.Random random) {
             outcome = random.Next(0, 2) == 0;
             base.InitCard(random); 

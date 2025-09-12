@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using LCTarrotCard.Config;
 using Random = UnityEngine.Random;
 
@@ -41,6 +42,13 @@ namespace LCTarrotCard.Cards {
             return weight >= 0 && weight <= 100 ? weight : defaultWeight;
         }
         
+        /// <summary>
+        /// Use this to register a custom card from another mod.
+        /// Use this in your mod's awake/start method
+        /// </summary>
+        /// <param name="cardType">The type of your card, do typeof(YourCardClass)</param>
+        /// <param name="weight">The probability of the card to be pulled</param>
+        [UsedImplicitly]
         public static void RegisterCard(Type cardType, int weight) {
             if (!typeof(Card).IsAssignableFrom(cardType)) {
                 PluginLogger.Warning("Trying to register a non-card type (type : " + cardType.Name + ")");

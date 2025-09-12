@@ -77,7 +77,7 @@ namespace LCTarrotCard {
             component.scrapValue = 1;
             NetworkObject no = obj.GetComponent<NetworkObject>();
             no.Spawn();
-            component.FallToGround();
+            component.FallToGround(false, true);
 
 
         }
@@ -105,6 +105,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.1.2";
+        public const string PLUGIN_VERSION = "1.2.0";
     }
 }
