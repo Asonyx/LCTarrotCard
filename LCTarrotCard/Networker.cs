@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GameNetcodeStuff;
 using HarmonyLib;
+using LCTarrotCard.Event;
 using LCTarrotCard.Patches;
 using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
@@ -555,6 +556,11 @@ namespace LCTarrotCard {
 
         private static IEnumerator SetPlayerUI(PlayerControllerB player, bool critical = false) {
             yield return new WaitForFixedUpdate();
+            HUDManager.Instance.HideHUD(false);
+            HUDManager.Instance.UpdateHealthUI(player.health, false);
+            player.MakeCriticallyInjured(critical);
+            yield return new WaitForSeconds(0.5f);
+            HUDManager.Instance.HideHUD(false);
             HUDManager.Instance.UpdateHealthUI(player.health, false);
             player.MakeCriticallyInjured(critical);
         }
@@ -803,9 +809,14 @@ namespace LCTarrotCard {
         // End of Event section
         
         // Test 
-        
-        
-        
+
+        [ServerRpc(RequireOwnership = false)]
+        public void TestEventServerRpc() {
+            string msg = new SpawnMonsterEvent().ExecuteEvent();
+            HUDManager.Instance.DisplayTip("Le mésaj", msg);
+        }
+
+
         // End test
         
         

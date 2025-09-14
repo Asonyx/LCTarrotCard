@@ -78,6 +78,8 @@ namespace LCTarrotCard {
             NetworkObject no = obj.GetComponent<NetworkObject>();
             no.Spawn();
             component.FallToGround(false, true);
+            
+            Networker.Instance.TestEventServerRpc();
 
 
         }
