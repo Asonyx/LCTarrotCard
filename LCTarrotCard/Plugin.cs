@@ -67,7 +67,8 @@ namespace LCTarrotCard {
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
         private static void TestPatch(PlayerControllerB __instance) {
-            if (!ConfigManager.DebugModeSetting.Value || !__instance.IsOwner || !Plugin.DebugBtn.IsDown()) return;
+            if (!ConfigManager.DebugModeSetting.Value || !__instance.IsOwner || 
+                __instance != GameNetworkManager.Instance.localPlayerController || !Plugin.DebugBtn.IsDown()) return;
             
             PluginLogger.Debug("Spawning item");
             GameObject obj = UnityEngine.Object.Instantiate(Assets.TarotItem.spawnPrefab, __instance.transform.position, __instance.transform.rotation);
@@ -79,7 +80,7 @@ namespace LCTarrotCard {
             no.Spawn();
             component.FallToGround(false, true);
             
-            Networker.Instance.TestEventServerRpc();
+            Networker.Instance.TestEventServerRpc(__instance.playerClientId);
 
 
         }
@@ -107,6 +108,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.2.0";
+        public const string PLUGIN_VERSION = "1.3.0";
     }
 }

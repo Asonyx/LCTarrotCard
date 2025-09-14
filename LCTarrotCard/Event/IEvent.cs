@@ -1,4 +1,6 @@
-﻿namespace LCTarrotCard.Event {
+﻿using GameNetcodeStuff;
+
+namespace LCTarrotCard.Event {
     public interface IEvent {
         /// <returns>The name of the event</returns>
         string GetEventName();
@@ -8,7 +10,7 @@
         /// WARNING : This runs server-side only, use RPC to execute client-side code
         /// </summary>
         /// <returns>A quick and generic description of what happened</returns>
-        string ExecuteEvent();
+        string ExecuteEvent(PlayerControllerB targetPlayer);
         
         /// <returns>The danger level of the effect (0 = good, 0.5 = neutral, 1 = bad)</returns>
         float GetEventDangerLevel();

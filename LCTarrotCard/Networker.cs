@@ -811,8 +811,8 @@ namespace LCTarrotCard {
         // Test 
 
         [ServerRpc(RequireOwnership = false)]
-        public void TestEventServerRpc() {
-            string msg = new SpawnMonsterEvent().ExecuteEvent();
+        public void TestEventServerRpc(ulong player) {
+            string msg = new OopsAllTwoHandedEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
             HUDManager.Instance.DisplayTip("Le mésaj", msg);
         }
 

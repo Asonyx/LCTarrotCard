@@ -1,4 +1,6 @@
-﻿using Unity.Netcode;
+﻿using System.Collections.Generic;
+using GameNetcodeStuff;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace LCTarrotCard.Event {
@@ -6,12 +8,28 @@ namespace LCTarrotCard.Event {
         public string GetEventName() {
             return "Monster Wave";
         }
-        public string ExecuteEvent() {
+        public string ExecuteEvent(PlayerControllerB targetPlayer) {
             float addedPower = 0f;
             float targetPower = RoundManager.Instance.currentMaxInsidePower - RoundManager.Instance.currentEnemyPower;
+            
+            List<int> weights = new List<int>();
+            int totalWeight = 0;
+            foreach (SpawnableEnemyWithRarity enemy in RoundManager.Instance.currentLevel.Enemies) {
+                weights.Add(enemy.rarity);
+                totalWeight += enemy.rarity;
+            }
+            
             while (addedPower < targetPower) {
-                EnemyType randomEnemy = RoundManager.Instance.currentLevel.
-                    Enemies[Random.Range(0, RoundManager.Instance.currentLevel.Enemies.Count)].enemyType;
+                int randomWeightedIndex = Random.Range(0, totalWeight);
+                EnemyType randomEnemy = null;
+                int cumulativeWeight = 0;
+                foreach (int i in weights) {
+                    cumulativeWeight += i;
+                    if (randomWeightedIndex >= cumulativeWeight) continue;
+                    randomEnemy = RoundManager.Instance.currentLevel.Enemies[weights.IndexOf(i)].enemyType;
+                    break;
+                }
+                if (randomEnemy == null) continue;
                 addedPower += randomEnemy.PowerLevel;
                 Vector3 randomVentPos = RoundManager.Instance.
                     allEnemyVents[Random.Range(0, RoundManager.Instance.allEnemyVents.Length)].transform.position;
@@ -26,7 +44,7 @@ namespace LCTarrotCard.Event {
         }
 
         public float GetEventWeight() {
-            return 0.8f;
+            return 0.5f;
         }
         public float GetEventRange() {
             return 0.15f;
