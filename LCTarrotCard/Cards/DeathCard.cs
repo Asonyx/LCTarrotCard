@@ -84,7 +84,7 @@ namespace LCTarrotCard.Cards {
                     break;
                 case 3:
                     PluginLogger.Debug("Worm chase player or spawn");
-                    Networker.Instance.TeleportOrSpawnWornServerRpc((int) playerWhoDrew.playerClientId);
+                    Networker.Instance.TeleportOrSpawnWormServerRpc((int) playerWhoDrew.playerClientId);
                     break;
             }
             

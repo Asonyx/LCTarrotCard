@@ -104,6 +104,7 @@
         <Compile Include="Event\IEvent.cs" />
         <Compile Include="Event\MoreTrapEvent.cs" />
         <Compile Include="Event\OopsAllTwoHandedEvent.cs" />
+        <Compile Include="Event\SpawnFakeTraps.cs" />
         <Compile Include="Event\SpawnMonsterEvent.cs" />
         <Compile Include="Event\SpawnScrapEvent.cs" />
         <Compile Include="Items\TarotBehaviour.cs" />

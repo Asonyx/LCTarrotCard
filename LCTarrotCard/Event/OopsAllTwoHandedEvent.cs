@@ -15,10 +15,12 @@ namespace LCTarrotCard.Event {
             List<SpawnableItemWithRarity> spawnableItems = RoundManager.Instance.currentLevel.spawnableScrap.
                                                                         Where(rarity => rarity.spawnableItem.twoHanded).ToList();
             
-            List<NetworkObjectReference> spawnerItemList = new List<NetworkObjectReference>();
+            List<NetworkObjectReference> spawnedItemList = new List<NetworkObjectReference>();
+            List<int> itemValues = new List<int>();
             foreach (GrabbableObject grabbableObject in objectsInScene) {
                 if (grabbableObject.radarIcon == null || grabbableObject.radarIcon.gameObject == null || 
                     !grabbableObject.radarIcon.gameObject.activeSelf || grabbableObject.isHeld) continue;
+                if (grabbableObject.itemProperties.twoHanded) continue;
                 Vector3 position = grabbableObject.transform.position + new Vector3(0, 0.2f, 0);
                 int value = grabbableObject.scrapValue;
                 grabbableObject.DestroyObjectInHand(grabbableObject.playerHeldBy);
@@ -31,15 +33,16 @@ namespace LCTarrotCard.Event {
                 newGrabbable.fallTime = 0f;
                 NetworkObject netObj = newItemObject.GetComponent<NetworkObject>();
                 netObj.Spawn();
-                // TODO : sync value
-                
+                spawnedItemList.Add(netObj);
+                itemValues.Add(value);
+
             }
+
+            targetPlayer.StartCoroutine(Networker.WaitAndSyncItemsValues(spawnedItemList.ToArray(),
+                                        itemValues.ToArray()));
+            
             
             return "All one-handed items have been replaced with two-handed items!";
-        }
-
-        private static IEnumerator WaitAndSyncValue() {
-            yield break;
         }
         
         public float GetEventDangerLevel() {

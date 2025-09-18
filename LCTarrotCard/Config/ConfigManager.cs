@@ -167,8 +167,8 @@ namespace LCTarrotCard.Config {
                     new AcceptableValueRange<float>(0f, 1f)));
             
             // Devil
-            DevilBlowChance = configFile.Bind("DevilCard", "DevilBlowChance", 15,
-                new ConfigDescription("Chance for the Devil card to play the ghost breathe SFX (default : 15)",
+            DevilBlowChance = configFile.Bind("DevilCard", "DevilBlowChance", 10,
+                new ConfigDescription("Chance for the Devil card to play the ghost breathe SFX (default : 10)",
                     new AcceptableValueRange<int>(0, 100)));
             
             // Hermit

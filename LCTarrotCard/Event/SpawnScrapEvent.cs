@@ -20,6 +20,9 @@ namespace LCTarrotCard.Event {
             
             if (totalWeight == 0) return "No scrap could be spawned.";
             
+            List<NetworkObjectReference> spawnedItemList = new List<NetworkObjectReference>();
+            List<int> itemValues = new List<int>();
+            
             for (int i = 0; i < Random.Range(1, 5); i++) {
                 int cumulativeWeight = 0;
                 int randomWeight = Random.Range(0, totalWeight);
@@ -37,12 +40,16 @@ namespace LCTarrotCard.Event {
                 GrabbableObject component = obj.GetComponent<GrabbableObject>();
                 component.transform.rotation = Quaternion.Euler(component.itemProperties.restingRotation);
                 component.fallTime = 0f;
-                component.scrapValue = 1;
+                component.scrapValue = Random.Range(component.itemProperties.minValue, component.itemProperties.maxValue);
                 NetworkObject no = obj.GetComponent<NetworkObject>();
                 no.Spawn();
                 component.FallToGround(false, true);
-                // TODO : sync value
+                spawnedItemList.Add(no);
+                itemValues.Add(component.scrapValue);
             }
+            
+            targetPlayer.StartCoroutine(Networker.WaitAndSyncItemsValues(spawnedItemList.ToArray(),
+                                        itemValues.ToArray()));
             
             return "Some scrap has spawned around you.";
         }
@@ -55,7 +62,7 @@ namespace LCTarrotCard.Event {
             return 0.4f;
         }
         public float GetEventRange() {
-            return 0.15f;
+            return 0.2f;
         }
     }
 }

@@ -168,6 +168,12 @@ namespace LCTarrotCard.Util {
             return GameObject.FindGameObjectsWithTag("OutsideAINode");
         }
         
+        public static Vector3 GetRandomAINodePosition(bool inside = true) {
+            GameObject[] nodes = inside ? GetAllInsideAINodes() : GetAllOutsideAINodes();
+            if (nodes.Length == 0) return Vector3.zero;
+            return nodes[Rng.Next(nodes.Length)].transform.position;
+        }
+        
         public static EnemyVent[] GetAllEnemyVents() {
             return Object.FindObjectsOfType<EnemyVent>();
         }

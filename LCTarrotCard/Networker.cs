@@ -753,7 +753,7 @@ namespace LCTarrotCard {
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void TeleportOrSpawnWornServerRpc(int playerId) {
+        public void TeleportOrSpawnWormServerRpc(int playerId) {
             PlayerControllerB chasedPlayer = StartOfRound.Instance.allPlayerScripts[playerId];
             if (!chasedPlayer.isPlayerControlled) return;
             SandWormAI worm = null;
@@ -804,15 +804,33 @@ namespace LCTarrotCard {
         
         // Start of Event section
         
+        public static IEnumerator WaitAndSyncItemsValues(NetworkObjectReference[] items, int[] values) {
+            yield return new WaitForSeconds(0.4f);
+            Instance.SyncItemsValuesClientRpc(items, values);
+        }
+
+        [ClientRpc]
+        public void SyncItemsValuesClientRpc(NetworkObjectReference[] items, int[] values) {
+            if (items.Length != values.Length) {
+                PluginLogger.Error("Items and values length mismatch");
+                return;
+            }
+            for (int i = 0; i < items.Length; i++) {
+                items[i].TryGet(out NetworkObject netObj, NetworkManager.Singleton);
+                if (!netObj) continue;
+                GrabbableObject item = netObj.GetComponent<GrabbableObject>();
+                if (item != null) item.SetScrapValue(values[i]);
+            }
+        }
         
         
         // End of Event section
         
         // Test 
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc]
         public void TestEventServerRpc(ulong player) {
-            string msg = new OopsAllTwoHandedEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
+            string msg = new MoreTrapEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
             HUDManager.Instance.DisplayTip("Le mésaj", msg);
         }
 
