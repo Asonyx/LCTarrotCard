@@ -171,7 +171,7 @@ namespace LCTarrotCard.Util {
         public static Vector3 GetRandomAINodePosition(bool inside = true) {
             GameObject[] nodes = inside ? GetAllInsideAINodes() : GetAllOutsideAINodes();
             if (nodes.Length == 0) return Vector3.zero;
-            return nodes[Rng.Next(nodes.Length)].transform.position;
+            return nodes[Random.Range(0, nodes.Length)].transform.position;
         }
         
         public static EnemyVent[] GetAllEnemyVents() {

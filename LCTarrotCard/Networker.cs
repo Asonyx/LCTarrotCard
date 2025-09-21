@@ -555,11 +555,11 @@ namespace LCTarrotCard {
         }
 
         private static IEnumerator SetPlayerUI(PlayerControllerB player, bool critical = false) {
-            yield return new WaitForFixedUpdate();
+            yield return new WaitForSeconds(0.3f);
             HUDManager.Instance.HideHUD(false);
             HUDManager.Instance.UpdateHealthUI(player.health, false);
             player.MakeCriticallyInjured(critical);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(3f);
             HUDManager.Instance.HideHUD(false);
             HUDManager.Instance.UpdateHealthUI(player.health, false);
             player.MakeCriticallyInjured(critical);
@@ -830,6 +830,7 @@ namespace LCTarrotCard {
 
         [ServerRpc]
         public void TestEventServerRpc(ulong player) {
+            if (!IsOwner) return;
             string msg = new MoreTrapEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
             HUDManager.Instance.DisplayTip("Le mésaj", msg);
         }
@@ -839,13 +840,13 @@ namespace LCTarrotCard {
         
         
         public override void OnNetworkSpawn() {
-            
-            
-            if (NetworkManager.Singleton != null && (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
-                Instance?.gameObject.GetComponent<NetworkObject>().Despawn();
             Instance = this;
-            
             base.OnNetworkSpawn();
+        }
+
+        public override void OnNetworkDespawn() {
+            if (Instance == this) Instance = null;
+            base.OnNetworkDespawn();
         }
 
         [HarmonyPatch(typeof(StartOfRound), "Awake")]
