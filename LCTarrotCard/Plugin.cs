@@ -7,6 +7,7 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using LCTarrotCard.Cards;
 using LCTarrotCard.Config;
+using LCTarrotCard.Event;
 using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
 using Unity.Netcode;
@@ -34,13 +35,14 @@ namespace LCTarrotCard {
             Assets.Load();
 
             AllCards.Init();
+            //EventManager.Init();
             
             harmony.PatchAll();
             NetcodePatcher();
             
             logger.LogInfo("LCTarotCard loaded successfully");
         }
-
+        
         internal static KeyboardShortcut DebugBtn = new KeyboardShortcut(KeyCode.BackQuote);
         
         
@@ -80,7 +82,7 @@ namespace LCTarrotCard {
             no.Spawn();
             component.FallToGround(false, true);
             
-            Networker.Instance.TestEventServerRpc(__instance.playerClientId);
+            //Networker.Instance.TestEventServerRpc(__instance.playerClientId);
 
 
         }
@@ -108,6 +110,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.3.0";
+        public const string PLUGIN_VERSION = "1.1.5";
     }
 }

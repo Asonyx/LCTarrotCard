@@ -24,10 +24,12 @@ namespace LCTarrotCard.Cards {
         /// Do not use UnityEngine.Random here, unless you want different results on each client
         /// </summary>
         /// <param name="random">A random object synced between all clients</param>
-        public virtual void InitCard(System.Random random) {
+        /// <param name="cardBackMaterial">The material of the back of the card, should be the same as the tarot deck</param>
+        public virtual void InitCard(System.Random random, Material cardBackMaterial = null) {
             Renderer renderer = cardPrefab.GetComponent<Renderer>();
             Material[] updatedMats = renderer.materials;
             updatedMats[0] = GetCardMaterial();
+            if (cardBackMaterial != null) updatedMats[2] = cardBackMaterial;
             renderer.materials = updatedMats;
             
         }

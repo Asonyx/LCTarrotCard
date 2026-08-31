@@ -20,9 +20,9 @@ namespace LCTarrotCard.Cards {
 
         private Material cardToMimic;
         
-        public override void InitCard(System.Random random) {
+        public override void InitCard(System.Random random, Material cardBackMaterial = null) {
             cardToMimic = allCardMat[random.Next(0, allCardMat.Length)];
-            base.InitCard(random);
+            base.InitCard(random, cardBackMaterial);
         }
 
         public override Material GetCardMaterial() {

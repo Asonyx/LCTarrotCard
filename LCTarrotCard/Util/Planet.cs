@@ -73,17 +73,11 @@ namespace LCTarrotCard.Util {
         }
 
         public SpawnableItemWithRarity GetSpawnableItemForPlanet(Planet planet) {
-            return new SpawnableItemWithRarity {
-                spawnableItem = item,
-                rarity = AccessRaritySafe((int)planet)
-            };
+            return new SpawnableItemWithRarity(item, AccessRaritySafe((int)planet));
         }
 
         public SpawnableItemWithRarity GetSpawnableItemForPlanet(int planet) {
-            return new SpawnableItemWithRarity {
-                spawnableItem = this.item,
-                rarity = AccessRaritySafe(planet)
-            };
+            return new SpawnableItemWithRarity(item, AccessRaritySafe(planet));
         }
 
         private int AccessRaritySafe(int planet) {

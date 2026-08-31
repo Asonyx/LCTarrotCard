@@ -14,19 +14,25 @@ namespace LCTarrotCard.Event {
         /// Use this in your mod's awake/start method if you want to add custom events.
         /// </summary>
         /// <param name="eventToRegister">The event to be added</param>
-        /// <param name="dangerLevel">0 is good, 0.5 is neutral, 1 is bad</param>
-        /// <param name="range">The amount of spread on the danger scale</param>
-        /// <param name="weight">The higher, the most probable of this event happening</param>
-        public static void RegisterEvent(IEvent eventToRegister, float range = 0.2f, float weight = 1f) {
+        public static void RegisterEvent(IEvent eventToRegister) {
             if (eventToRegister.GetEventDangerLevel() < 0f || eventToRegister.GetEventDangerLevel() > 1f) {
                 PluginLogger.Warning("Trying to register an event with an invalid danger level (level : " + eventToRegister.GetEventDangerLevel() + ")");
                 return;
             }
-            eventList.Add(eventToRegister, range, weight, eventToRegister.GetEventDangerLevel());
+            eventList.Add(eventToRegister, eventToRegister.GetEventRange(), eventToRegister.GetEventWeight(), eventToRegister.GetEventDangerLevel());
+        }
+
+        public static void RegisterEvents(IEvent[] eventsToRegister) {
+            foreach (IEvent eventToRegister in eventsToRegister) {
+                RegisterEvent(eventToRegister);
+            }
         }
 
         internal static void Init() {
-            
+            RegisterEvents(new IEvent[] {
+                new SpawnMonsterEvent(), new SpawnScrapEvent(), new EnemyComeToMeEvent(), 
+                new MoreTrapEvent(), new SpawnFakeTrapsEvent(), new OopsAllTwoHandedEvent()
+            });
         }
 
         /// <summary>

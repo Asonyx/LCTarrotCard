@@ -10,9 +10,9 @@ namespace LCTarrotCard.Cards {
 
         private bool outcome;
         
-        public override void InitCard(System.Random random) {
+        public override void InitCard(System.Random random, Material cardBackMaterial = null) {
             outcome = random.Next(0, 2) == 0;
-            base.InitCard(random); 
+            base.InitCard(random, cardBackMaterial); 
         }
 
         public override Material GetCardMaterial() {

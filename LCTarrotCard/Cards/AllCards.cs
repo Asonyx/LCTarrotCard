@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using LCTarrotCard.Config;
+using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
 namespace LCTarrotCard.Cards {
@@ -22,7 +24,6 @@ namespace LCTarrotCard.Cards {
         }
 
         public static readonly Dictionary<Type, int> AllCardsWeighted = new Dictionary<Type, int>();
-        private static int _totalWeight;
         
         internal static void Init() {
             AllCardsWeighted.Add(typeof(TowerCard), GetValidWeight(ConfigManager.TowerCardChance.Value, BaseProbabilityTable.TowerCard));
@@ -35,7 +36,6 @@ namespace LCTarrotCard.Cards {
             AllCardsWeighted.Add(typeof(DeathCard), GetValidWeight(ConfigManager.DeathCardChance.Value, BaseProbabilityTable.DeathCard));
             AllCardsWeighted.Add(typeof(HangedManCard), GetValidWeight(ConfigManager.HangedManCardChance.Value, BaseProbabilityTable.HangedManCard));
             AllCardsWeighted.Add(typeof(FoolCard), GetValidWeight(ConfigManager.FoolCardChance.Value, BaseProbabilityTable.FoolCard));
-            RecalculateTotalWeight();
         }
         
         private static int GetValidWeight(int weight, int defaultWeight) {
@@ -59,25 +59,39 @@ namespace LCTarrotCard.Cards {
                 PluginLogger.Warning("Trying to register a card that is already registered (type : " + cardType.Name + ")");
                 return;
             }
+            PluginLogger.Debug("Adding a new card to the standard deck (type : " + cardType.Name + "; new size : " + AllCardsWeighted.Count + "; total weight :  " + CalculateTotalWeight(AllCardsWeighted) + ")");
             AllCardsWeighted.Add(cardType, weight);
-            RecalculateTotalWeight();
         }
         
-        public static List<Type> GetAllCardsAsList() {
-            return new List<Type>(AllCardsWeighted.Keys);
+        /// <summary>
+        /// Convert the cardset of paired card type and weight to just a list of the card type
+        /// </summary>
+        /// <param name="cardSet">The card set following this pattern : {CardClass.GetType() : weight}</param>
+        /// <returns>A list of the card type</returns>
+        public static List<Type> GetAllCardsAsList(Dictionary<Type, int> cardSet) {
+            return new List<Type>(cardSet.Keys);
         }
         
-        private static void RecalculateTotalWeight() {
-            _totalWeight = 0;
-            foreach (int weight in AllCardsWeighted.Values) {
-                _totalWeight += weight;
-            }
+        /// <summary>
+        /// Compute the sum of all the weights
+        /// </summary>
+        /// <param name="cardSet">The card set following this pattern : {CardClass.GetType() : weight}</param>
+        /// <returns>The total weight</returns>
+        private static int CalculateTotalWeight(Dictionary<Type, int> cardSet) {
+            return cardSet.Values.Sum();
         }
 
-        public static Type PullRandomCard() {
-
+        /// <summary>
+        /// Pull a random card from the deck with a probability according to the weight
+        /// </summary>
+        /// <param name="cardSet">The card set following this pattern : {CardClass.GetType() : weight}</param>
+        /// <returns>The randomly pulled card</returns>
+        public static Type PullRandomCard(Dictionary<Type, int> cardSet) {
+            
+            PluginLogger.Debug("Pulling a card from the following deck\n" + cardSet);
+            
             int currentWeight = 0;
-            int randomNumber = Random.Range(0, _totalWeight + 1);
+            int randomNumber = Random.Range(0, CalculateTotalWeight(cardSet) + 1);
             Type cardChoose = typeof(object);
             foreach (KeyValuePair<Type, int> entry in AllCardsWeighted) {
                 if (entry.Value + currentWeight >= randomNumber) {
@@ -86,6 +100,8 @@ namespace LCTarrotCard.Cards {
                 }
                 currentWeight += entry.Value;
             }
+            
+            PluginLogger.Debug("Pulled card : " + cardChoose);
 
             if (typeof(Card).IsAssignableFrom(cardChoose)) return cardChoose;
             

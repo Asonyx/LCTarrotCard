@@ -82,6 +82,8 @@ namespace LCTarrotCard {
                 if (!coilhead.isEnemyDead && coilhead.IsSpawned) {
                     agroCount++;
                     coilhead.SwitchToBehaviourState(1);
+                    if (!SpringManAIPatch.ChasingSprings.Contains(coilhead.NetworkObjectId))
+                        SpringManAIPatch.ChasingSprings.Add(coilhead.NetworkObjectId);
                 }
                 if (agroCount >= 2) return;
             }
@@ -104,6 +106,8 @@ namespace LCTarrotCard {
             coilhead.GetComponent<SpringManAI>().SetEnemyOutside();
             
             coilhead.GetComponent<SpringManAI>().SwitchToBehaviourState(1);
+            if (!SpringManAIPatch.ChasingSprings.Contains(coilhead.GetComponent<SpringManAI>().NetworkObjectId))
+                SpringManAIPatch.ChasingSprings.Add(coilhead.GetComponent<SpringManAI>().NetworkObjectId);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -831,7 +835,7 @@ namespace LCTarrotCard {
         [ServerRpc]
         public void TestEventServerRpc(ulong player) {
             if (!IsOwner) return;
-            string msg = new MoreTrapEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
+            string msg = new EnemyComeToMeEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
             HUDManager.Instance.DisplayTip("Le mésaj", msg);
         }
 
