@@ -167,6 +167,8 @@ public static readonly int HangedManCard = 1;
 public static readonly int FoolCard = 17;
 ```
 
+You should generally register your card at the same time as you load your assets in your mod
+
 ## 4 - Advanced method
 There are two additional methods you can override if you need to do more specific things with your card
 
