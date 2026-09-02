@@ -117,7 +117,7 @@ Here are the different effects you can get from each card :<br/>
 </details>
 
 ## For modders :
-### I will (re)make a good tutorial in a future update because I messed things up in the previous one
+Check out the [modder's guide](https://github.com/Asonyx/LCTarrotCard/blob/master/ModderGuide.md)
 
 # To contact me :
 - asonyx (On discord)
