@@ -11,17 +11,15 @@ using UnityEngine;
 using Random = System.Random;
 
 namespace LCTarrotCard.Items {
-    public class TarotDeckBaseBehaviour : GrabbableObject {
+    public abstract class TarotDeckBaseBehaviour : GrabbableObject {
         
         public int cardLeft = 10;
-        
-        protected bool drawFoolWhenCantDraw = false;
 
         protected AudioSource itemAudio;
         protected PlayerControllerB playerWhoDrew;
         public bool isDrawingCard;
 
-        public Dictionary<Type, int> cardSet;
+        private Dictionary<Type, int> cardSet;
 
         private GameObject currentCard;
         private Card currentCardProperties;
@@ -29,14 +27,23 @@ namespace LCTarrotCard.Items {
         private bool drawingCoroutinePlaying;
         
         private readonly Vector3 originalCardScale = Vector3.one;
-        
 
-        private readonly AnimationCurve controlCurve = new AnimationCurve(
+
+        private static readonly AnimationCurve controlCurve = new AnimationCurve(
             new Keyframe(0f, 0f, 0f, 0f, .5f, .5f),
             new Keyframe(1f, 1f, 0f, 0f, .5f, .5f));
 
+        public abstract bool ShouldDrawFoolWhenCantDraw();
+
+
+        public abstract Material GetCardBackMaterial();
+
+        public abstract Dictionary<Type, int> GetCardSet();
+
+        public Dictionary<Type, int> CardSet => cardSet;
+
         public virtual void Awake() {
-            cardSet = AllCards.AllCardsWeighted;
+            cardSet = GetCardSet();
         }
 
         public override void Start() {
@@ -100,7 +107,7 @@ namespace LCTarrotCard.Items {
             currentCard.transform.localEulerAngles += new Vector3(180, 0, 0);
             PluginLogger.Debug("Card with type " + pulledCardType.Name);
             currentCardProperties = (Card) Activator.CreateInstance(pulledCardType, currentCard, itemAudio);
-            currentCardProperties.InitCard(new Random(randomSeed));
+            currentCardProperties.InitCard(new Random(randomSeed), GetCardBackMaterial());
             
             StartCoroutine(DrawingCoroutine());
         }
@@ -166,7 +173,7 @@ namespace LCTarrotCard.Items {
             Type pulledCard = AllCards.PullRandomCard(cardSet);
             
             if (!CanDrawCard()) {
-                if (drawFoolWhenCantDraw) pulledCard = typeof(FoolCard);
+                if (ShouldDrawFoolWhenCantDraw()) pulledCard = typeof(FoolCard);
                 else return;
             }
             
