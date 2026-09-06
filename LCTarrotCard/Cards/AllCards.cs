@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using LCTarrotCard.Config;
+using LCTarrotCard.Util;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
@@ -88,12 +89,12 @@ namespace LCTarrotCard.Cards {
         /// <returns>The randomly pulled card</returns>
         public static Type PullRandomCard(Dictionary<Type, int> cardSet) {
             
-            PluginLogger.Debug("Pulling a card from the following deck\n" + cardSet);
+            PluginLogger.Debug("Pulling a card from the deck :\n" + Helper.DictionnaryToString(cardSet));
             
             int currentWeight = 0;
             int randomNumber = Random.Range(0, CalculateTotalWeight(cardSet) + 1);
             Type cardChoose = typeof(object);
-            foreach (KeyValuePair<Type, int> entry in AllCardsWeighted) {
+            foreach (KeyValuePair<Type, int> entry in cardSet) {
                 if (entry.Value + currentWeight >= randomNumber) {
                     cardChoose = entry.Key;
                     break;

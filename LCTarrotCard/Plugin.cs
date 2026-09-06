@@ -7,12 +7,9 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using LCTarrotCard.Cards;
 using LCTarrotCard.Config;
-using LCTarrotCard.Event;
 using LCTarrotCard.Ressource;
-using LCTarrotCard.Util;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace LCTarrotCard {
     
@@ -110,6 +107,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.1.5";
+        public const string PLUGIN_VERSION = "1.2.0";
     }
 }

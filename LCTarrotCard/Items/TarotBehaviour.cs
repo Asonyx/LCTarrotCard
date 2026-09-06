@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace LCTarrotCard.Items {
     public class TarotBehaviour : TarotDeckBaseBehaviour {
+        
         public override bool ShouldDrawFoolWhenCantDraw() {
             return true;
         }
@@ -16,14 +17,6 @@ namespace LCTarrotCard.Items {
 
         public override Dictionary<Type, int> GetCardSet() {
             return AllCards.AllCardsWeighted;
-        }
-
-        public override void Awake() {
-            base.Awake();
-            
-            /*Dictionary<Type, int> testCardSet = new Dictionary<Type, int>();
-            testCardSet.Add(typeof(FoolCard), 1);
-            cardSet = testCardSet;*/
         }
 
         public override void Start() {

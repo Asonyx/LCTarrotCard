@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace LCTarrotCard.Util {
     
@@ -206,6 +209,10 @@ namespace LCTarrotCard.Util {
                 }
             }
             return closest;
+        }
+
+        public static string DictionnaryToString<K, V>(Dictionary<K, V> dict) {
+            return string.Join(", ", dict.Select(x => $"{x.Key}: {x.Value}"));
         }
 
         [HarmonyPatch(typeof(StartOfRound), "Start")]

@@ -19,8 +19,6 @@ namespace LCTarrotCard.Items {
         protected PlayerControllerB playerWhoDrew;
         public bool isDrawingCard;
 
-        private Dictionary<Type, int> cardSet;
-
         private GameObject currentCard;
         private Card currentCardProperties;
 
@@ -40,15 +38,10 @@ namespace LCTarrotCard.Items {
 
         public abstract Dictionary<Type, int> GetCardSet();
 
-        public Dictionary<Type, int> CardSet => cardSet;
-
-        public virtual void Awake() {
-            cardSet = GetCardSet();
-        }
-
         public override void Start() {
             base.Start();
             itemAudio = gameObject.GetComponent<AudioSource>();
+            if (itemAudio == null) PluginLogger.Warning("No audio source found for tarot deck class : " + GetType().FullName);
         }
 
         public override void ItemActivate(bool used, bool buttonDown = true) {
@@ -79,7 +72,7 @@ namespace LCTarrotCard.Items {
                 return;
             }
             
-            if (pulledCard < 0 || pulledCard >= AllCards.GetAllCardsAsList(cardSet).Count) {
+            if (pulledCard < 0 || pulledCard >= AllCards.GetAllCardsAsList(GetCardSet()).Count) {
                 PluginLogger.Error("Trying to pull a card with an invalid index");
                 DestroyAfterDrawing();
                 return;
@@ -102,7 +95,7 @@ namespace LCTarrotCard.Items {
                 gameObject.transform.GetChild(0).gameObject.SetActive(false);
             }
             
-            Type pulledCardType = AllCards.GetAllCardsAsList(cardSet)[pulledCard];
+            Type pulledCardType = AllCards.GetAllCardsAsList(GetCardSet())[pulledCard];
             currentCard = Instantiate(Assets.SingleTarotCard, gameObject.transform);
             currentCard.transform.localEulerAngles += new Vector3(180, 0, 0);
             PluginLogger.Debug("Card with type " + pulledCardType.Name);
@@ -170,14 +163,18 @@ namespace LCTarrotCard.Items {
 
         [ServerRpc]
         public void DrawCardServerRpc(ulong playerWhoPulled) {
-            Type pulledCard = AllCards.PullRandomCard(cardSet);
+            Type pulledCard = AllCards.PullRandomCard(GetCardSet());
             
             if (!CanDrawCard()) {
                 if (ShouldDrawFoolWhenCantDraw()) pulledCard = typeof(FoolCard);
-                else return;
+                else {
+                    isDrawingCard = false;
+                    return;
+                }
             }
             
-            int cardIndex = AllCards.GetAllCardsAsList(cardSet).IndexOf(pulledCard);
+            int cardIndex = AllCards.GetAllCardsAsList(GetCardSet()).IndexOf(pulledCard);
+            PluginLogger.Debug("Index of the card is " + cardIndex);
             DrawCardClientRpc(playerWhoPulled, cardIndex, new Random().Next());
         }
 
