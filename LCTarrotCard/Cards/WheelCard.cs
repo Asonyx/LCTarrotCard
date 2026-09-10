@@ -1,12 +1,13 @@
 ﻿using System;
 using GameNetcodeStuff;
 using LCTarrotCard.Config;
+using LCTarrotCard.Event;
 using LCTarrotCard.Ressource;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace LCTarrotCard.Cards {
-    public class WheelCard : Card {
+    public class WheelCard : EventCard {
 
         private bool outcome;
         
@@ -21,6 +22,16 @@ namespace LCTarrotCard.Cards {
 
         public override Material GetCardBurn() {
             return outcome ? Assets.Materials.BurnGreen : Assets.Materials.BurnRed;
+        }
+        
+        public WheelCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }
+        
+        public override float GetDangerLevel() {
+            return outcome ? 0.75f : 0.35f;
+        }
+
+        public override float GetSoftmaxTemperature() {
+            return 0.05f;
         }
 
         public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
@@ -62,6 +73,5 @@ namespace LCTarrotCard.Cards {
             return "The Wheel of Fortune";
         }
 
-        public WheelCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }
     }
 }

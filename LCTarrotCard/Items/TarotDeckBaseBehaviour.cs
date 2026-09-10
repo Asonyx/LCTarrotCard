@@ -65,17 +65,35 @@ namespace LCTarrotCard.Items {
             HUDManager.Instance.ChangeControlTipMultiple(toolTips.ToArray(), true, itemProperties);
         }
 
+        private Material GetRandomCardMaterial(Random rng) {
+            List<Type> cards = AllCards.GetAllCardsAsList(GetCardSet());
+            Type randomCardType = cards[rng.Next(0, cards.Count)];
+            try {
+                Card randomCard = (Card)Activator.CreateInstance(randomCardType, null, null);
+                return randomCard.GetCardMaterial();
+            } catch (Exception _) {
+                PluginLogger.Warning("Error while trying to get a random card material from the deck of the class " + GetType().FullName);
+            }
+            return null;
+        }
+
         public void StartDrawingCard(int pulledCard, int randomSeed) {
             if (playerWhoDrew == null) {
                 PluginLogger.Error("Trying to pull a card with a null player");
                 DestroyAfterDrawing();
                 return;
             }
+
+            bool forceFool = false;
             
             if (pulledCard < 0 || pulledCard >= AllCards.GetAllCardsAsList(GetCardSet()).Count) {
                 PluginLogger.Error("Trying to pull a card with an invalid index");
-                DestroyAfterDrawing();
-                return;
+                if (ShouldDrawFoolWhenCantDraw()) forceFool = true;
+                else {
+                    DestroyAfterDrawing();
+                    return;
+                }
+                PluginLogger.Warning("Tarot deck will draw a fool card instead");
             }
             
             if (drawingCoroutinePlaying) return;
@@ -95,12 +113,18 @@ namespace LCTarrotCard.Items {
                 gameObject.transform.GetChild(0).gameObject.SetActive(false);
             }
             
-            Type pulledCardType = AllCards.GetAllCardsAsList(GetCardSet())[pulledCard];
+            Type pulledCardType = forceFool ? typeof(FoolCard) : AllCards.GetAllCardsAsList(GetCardSet())[pulledCard];
             currentCard = Instantiate(Assets.SingleTarotCard, gameObject.transform);
             currentCard.transform.localEulerAngles += new Vector3(180, 0, 0);
             PluginLogger.Debug("Card with type " + pulledCardType.Name);
             currentCardProperties = (Card) Activator.CreateInstance(pulledCardType, currentCard, itemAudio);
             currentCardProperties.InitCard(new Random(randomSeed), GetCardBackMaterial());
+            if (currentCardProperties.GetType() == typeof(FoolCard)) {
+                Material randomCardMat = GetRandomCardMaterial(new Random(randomSeed));
+                if (randomCardMat != null) {
+                    ((FoolCard)currentCardProperties).SetCardToMimic(randomCardMat);
+                }
+            }
             
             StartCoroutine(DrawingCoroutine());
         }

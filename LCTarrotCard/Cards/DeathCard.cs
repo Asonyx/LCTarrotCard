@@ -33,6 +33,8 @@ namespace LCTarrotCard.Cards {
                 Helper.Shuffle(outcomes);
                 
                 rng = outcomes[0];
+
+                rng = 3; // TEST
                 
                 switch (rng) {
                     case 0:
@@ -41,7 +43,7 @@ namespace LCTarrotCard.Cards {
                         break;
                     case 1:
                         PluginLogger.Debug("Pop or spawning jester");
-                        Networker.Instance.PopOrSpawnJesterServerRpc(Random.Range(1.5f, 10.5f));
+                        Networker.Instance.PopOrSpawnJesterServerRpc(Random.Range(10.5f, 20.5f));
                         break;
                     case 2:
                         PluginLogger.Debug("Make ghost girl chase player or spawn");

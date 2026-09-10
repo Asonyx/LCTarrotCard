@@ -1,10 +1,11 @@
 ﻿using GameNetcodeStuff;
 using LCTarrotCard.Config;
+using LCTarrotCard.Event;
 using LCTarrotCard.Ressource;
 using UnityEngine;
 
 namespace LCTarrotCard.Cards {
-    public class TowerCard : Card {
+    public class TowerCard : EventCard {
 
         public override Material GetCardMaterial() {
             return Assets.Materials.CardTowerMat;
@@ -20,7 +21,21 @@ namespace LCTarrotCard.Cards {
             "What was that noise ?", "I think I saw something", "Something moved !"
         };
         
+        public override float GetDangerLevel() {
+            return 0.5f;
+        }
+
+        public override float GetSoftmaxTemperature() {
+            return 0.25f;
+        }
+        
         public override string ExecuteEffect(PlayerControllerB playerWhoDrew) {
+            if (TriggerEvent(playerWhoDrew)) {
+                PluginLogger.Debug("Executing card event effect");
+                return "";
+            }
+            PluginLogger.Debug("Executing card effect as normal");
+            
             int totalWeight = ConfigManager.TowerShipLeaveChance.Value + ConfigManager.TowerDoorsChance.Value +
                               ConfigManager.TowerSecurityDoorsChance.Value + ConfigManager.TowerShipDoorChance.Value +
                               ConfigManager.TowerBreakerChance.Value;
@@ -73,5 +88,6 @@ namespace LCTarrotCard.Cards {
         }
 
         public TowerCard(GameObject cardPrefab, AudioSource audioSource) : base(cardPrefab, audioSource) { }
+
     }
 }

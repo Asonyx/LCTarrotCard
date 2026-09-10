@@ -1,7 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using GameNetcodeStuff;
 using LCTarrotCard.Ressource;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace LCTarrotCard.Cards {
     public class FoolCard : Card {
@@ -21,8 +24,12 @@ namespace LCTarrotCard.Cards {
         private Material cardToMimic;
         
         public override void InitCard(System.Random random, Material cardBackMaterial = null) {
-            cardToMimic = allCardMat[random.Next(0, allCardMat.Length)];
+            SetCardToMimic(allCardMat[random.Next(0, allCardMat.Length)]);
             base.InitCard(random, cardBackMaterial);
+        }
+        
+        public void SetCardToMimic(Material mat) {
+            cardToMimic = mat;
         }
 
         public override Material GetCardMaterial() {

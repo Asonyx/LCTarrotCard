@@ -74,7 +74,7 @@ namespace LCTarrotCard {
             GrabbableObject component = obj.GetComponent<GrabbableObject>();
             component.transform.rotation = Quaternion.Euler(component.itemProperties.restingRotation);
             component.fallTime = 0f;
-            component.scrapValue = 1;
+            component.scrapValue = 100;
             NetworkObject no = obj.GetComponent<NetworkObject>();
             no.Spawn();
             component.FallToGround(false, true);
@@ -86,7 +86,7 @@ namespace LCTarrotCard {
 
     }
 
-    public static class PluginLogger {
+    internal static class PluginLogger {
         public static void Debug(object o) {
             if (ConfigManager.DebugModeSetting.Value) Plugin.Instance.logger.LogDebug("[DEBUG] " + o);
         }
@@ -107,6 +107,6 @@ namespace LCTarrotCard {
     public static class PluginConstants {
         public const string PLUGIN_GUID = "LCTarotCard";
         public const string PLUGIN_NAME = "Phasmophobia Tarot Card";
-        public const string PLUGIN_VERSION = "1.2.0";
+        public const string PLUGIN_VERSION = "1.2.1";
     }
 }

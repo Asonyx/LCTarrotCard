@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GameNetcodeStuff;
@@ -9,6 +10,8 @@ using LCTarrotCard.Ressource;
 using LCTarrotCard.Util;
 using Unity.Netcode;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace LCTarrotCard {
     [HarmonyPatch]
@@ -81,6 +84,7 @@ namespace LCTarrotCard {
             foreach (SpringManAI coilhead in coilheads) {
                 if (!coilhead.isEnemyDead && coilhead.IsSpawned) {
                     agroCount++;
+                    PluginLogger.Debug("Found coilhead !");
                     coilhead.SwitchToBehaviourState(1);
                     if (!SpringManAIPatch.ChasingSprings.Contains(coilhead.NetworkObjectId))
                         SpringManAIPatch.ChasingSprings.Add(coilhead.NetworkObjectId);
@@ -88,6 +92,7 @@ namespace LCTarrotCard {
                 if (agroCount >= 2) return;
             }
                             
+            PluginLogger.Debug("Didn't find any coilhead, spawning one");
             SpawnCoilheadServerRpc();
         }
         
@@ -176,8 +181,10 @@ namespace LCTarrotCard {
 
         [ServerRpc(RequireOwnership = false)]
         public void TeleportRandomEntityServerRpc(Vector3 position, bool inside) {
+            PluginLogger.Debug("Trying to teleport a random entity " + (inside ? "inside" : "outside"));
             List<EnemyAI> allEnemies = RoundManager.Instance.SpawnedEnemies;
             Helper.Shuffle(allEnemies);
+            PluginLogger.Debug("Enemies count : " + allEnemies.Count);
             foreach (EnemyAI enemy in allEnemies.Where(enemy => !enemy.isEnemyDead && enemy.isOutside == !inside && enemy.IsSpawned)) {
                 PluginLogger.Debug("Enemy is outside ? " + enemy.isOutside + " player inside ? " + inside);
                 PluginLogger.Debug("Tp " + enemy.enemyType.enemyName + " to " + position);
@@ -595,7 +602,7 @@ namespace LCTarrotCard {
                 bracken = flowerman.GetComponent<FlowermanAI>();
                 bracken.SyncPositionToClients();
             }
-            
+            PluginLogger.Debug("Bracken chasing");
             SyncBrackenPropertiesClientRpc(playerId, bracken.NetworkObjectId);
         }
         
@@ -797,51 +804,14 @@ namespace LCTarrotCard {
                 enemy.SetEnemyOutside(outside);
             }
 
-            
-
-            Vector3 newPos = enemy.ChooseClosestNodeToPosition(position).position;
+            Transform closestNode = enemy.ChooseClosestNodeToPosition(position);
+            Vector3 newPos = closestNode.position;
             enemy.serverPosition = newPos;
             enemy.transform.position = enemy.serverPosition;
             enemy.agent.Warp(enemy.serverPosition);
+            enemy.targetNode = closestNode;
             enemy.SyncPositionToClients();
         }
-        
-        // Start of Event section
-        
-        public static IEnumerator WaitAndSyncItemsValues(NetworkObjectReference[] items, int[] values) {
-            yield return new WaitForSeconds(0.4f);
-            Instance.SyncItemsValuesClientRpc(items, values);
-        }
-
-        [ClientRpc]
-        public void SyncItemsValuesClientRpc(NetworkObjectReference[] items, int[] values) {
-            if (items.Length != values.Length) {
-                PluginLogger.Error("Items and values length mismatch");
-                return;
-            }
-            for (int i = 0; i < items.Length; i++) {
-                items[i].TryGet(out NetworkObject netObj, NetworkManager.Singleton);
-                if (!netObj) continue;
-                GrabbableObject item = netObj.GetComponent<GrabbableObject>();
-                if (item != null) item.SetScrapValue(values[i]);
-            }
-        }
-        
-        
-        // End of Event section
-        
-        // Test 
-
-        [ServerRpc]
-        public void TestEventServerRpc(ulong player) {
-            if (!IsOwner) return;
-            string msg = new EnemyComeToMeEvent().ExecuteEvent(StartOfRound.Instance.allPlayerScripts[(int)player]);
-            HUDManager.Instance.DisplayTip("Le mésaj", msg);
-        }
-
-
-        // End test
-        
         
         public override void OnNetworkSpawn() {
             Instance = this;
@@ -863,6 +833,9 @@ namespace LCTarrotCard {
             networkHandlerHost.GetComponent<NetworkObject>().Spawn();
         }
         
+        // ReSharper disable once MemberCanBePrivate.Global
+        public static List<Action<GameObject>> RegisterOtherNetworker = new List<Action<GameObject>>();
+        
         [HarmonyPatch(typeof(GameNetworkManager), "Start")]
         [HarmonyPostfix]
         private static void Init() {
@@ -870,6 +843,9 @@ namespace LCTarrotCard {
             
             _networkPrefab = Assets.Bundle.LoadAsset<GameObject>("Assets/Tarrot/Networker.prefab");
             _networkPrefab.AddComponent<Networker>();
+            foreach (Action<GameObject> action in RegisterOtherNetworker) {
+                action.Invoke(_networkPrefab);
+            }
             NetworkManager.Singleton.AddNetworkPrefab(_networkPrefab);
         }
 

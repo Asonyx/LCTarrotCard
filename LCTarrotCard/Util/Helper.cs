@@ -13,6 +13,9 @@ namespace LCTarrotCard.Util {
     public class Helper {
         
         
+        /// <summary>
+        /// For easy access to enemy types without having to tidiously search them every time
+        /// </summary>
         public static class Enemies { // Not up to date, made in v56
 
             public static EnemyType Baboon;
@@ -153,6 +156,12 @@ namespace LCTarrotCard.Util {
         }
         
         private static readonly System.Random Rng = new System.Random();  
+        
+        /// <summary>
+        /// Shuffle the list using Fisher-Yates algorithm
+        /// Note : this will NOT copy the list, it will shuffle the original list (returns nothing)
+        /// </summary>
+        /// <param name="list">The list to shuffle</param>
 
         public static void Shuffle<T>(IList<T> list) {  
             int n = list.Count;  
@@ -163,24 +172,49 @@ namespace LCTarrotCard.Util {
             }  
         }
 
+        /// <summary>
+        /// Get all the AI nodes inside the factory (or mension/mine)
+        /// Warning : can return node that are inside some walls
+        /// </summary>
+        /// <returns>An array of all the AI nodes inside the factory</returns>
         public static GameObject[] GetAllInsideAINodes() {
             return GameObject.FindGameObjectsWithTag("AINode");
         }
         
+        /// <summary>
+        /// Get all the AI nodes of the map, outside
+        /// </summary>
+        /// <returns>The AI nodes outside</returns>
         public static GameObject[] GetAllOutsideAINodes() {
             return GameObject.FindGameObjectsWithTag("OutsideAINode");
         }
         
+        /// <summary>
+        /// Return the vector position of a random AI node inside or outside
+        /// </summary>
+        /// <param name="inside">True if the node should be inside, false otherwise</param>
+        /// <returns>The position of the randomly chosen node</returns>
         public static Vector3 GetRandomAINodePosition(bool inside = true) {
             GameObject[] nodes = inside ? GetAllInsideAINodes() : GetAllOutsideAINodes();
             if (nodes.Length == 0) return Vector3.zero;
             return nodes[Random.Range(0, nodes.Length)].transform.position;
         }
         
+        /// <summary>
+        /// Return a list of all the enemy vents (spawning points) inside the map
+        /// </summary>
+        /// <returns>The enemy vents inside the map</returns>
+        
         public static EnemyVent[] GetAllEnemyVents() {
             return Object.FindObjectsOfType<EnemyVent>();
         }
 
+        /// <summary>
+        /// Return a random spawn location for an enemy, either inside or outside the factory
+        /// </summary>
+        /// <param name="inside">Whether the spawn location should be inside the factory</param>
+        /// <param name="useVentsInstead">Whether to use enemy vents instead of AI nodes</param>
+        /// <returns>The random spawn location, or null if none is found</returns>
         [CanBeNull]
         public static Transform GetRandomSpawnLocation(bool inside = true, bool useVentsInstead = true) {
             if (inside) {
@@ -197,20 +231,30 @@ namespace LCTarrotCard.Util {
             return nodesOutside[Rng.Next(nodesOutside.Length)].transform;
         }
         
+        /// <summary>
+        /// Find the closest AI node to a given position
+        /// </summary>
+        /// <param name="position">The position to find the closest node to</param>
+        /// <param name="inside">True if the node should be inside, false otherwise</param>
+        /// <returns>The closest AI node, or null if none is found</returns>
         public static GameObject ClosestAINode(Vector3 position, bool inside) {
             GameObject[] nodes = inside ? GameObject.FindGameObjectsWithTag("AINode") : GameObject.FindGameObjectsWithTag("OutsideAINode");
             GameObject closest = null;
             float minDist = float.MaxValue;
             foreach (GameObject node in nodes) {
                 float dist = Vector3.Distance(node.transform.position, position);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = node;
-                }
+                if (dist >= minDist) continue;
+                minDist = dist;
+                closest = node;
             }
             return closest;
         }
 
+        /// <summary>
+        /// Convert a dictionary to a string
+        /// </summary>
+        /// <param name="dict">The dictionary to convert</param>
+        /// <returns>The string representation of the dictionary</returns>
         public static string DictionnaryToString<K, V>(Dictionary<K, V> dict) {
             return string.Join(", ", dict.Select(x => $"{x.Key}: {x.Value}"));
         }

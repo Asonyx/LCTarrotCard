@@ -2,10 +2,16 @@
 using System.Collections.Generic;
 using LCTarrotCard.Cards;
 using LCTarrotCard.Config;
+using LCTarrotCard.Util;
 using UnityEngine;
 
 namespace LCTarrotCard.Items {
     public class TarotBehaviour : TarotDeckBaseBehaviour {
+        
+        // For testing one card at a time, not meant to be used in production
+        private static Dictionary<Type, int> testDeck = new Dictionary<Type, int>() {
+            { typeof(TowerCard), 100 }, { typeof(FoolCard), 1 } 
+        };
         
         public override bool ShouldDrawFoolWhenCantDraw() {
             return true;
@@ -16,7 +22,7 @@ namespace LCTarrotCard.Items {
         }
 
         public override Dictionary<Type, int> GetCardSet() {
-            return AllCards.AllCardsWeighted;
+            return DebugOnly.OnlyIfTesting(testDeck, AllCards.AllCardsWeighted);
         }
 
         public override void Start() {
